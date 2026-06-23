@@ -1,0 +1,2110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ArhoShop — кроссовки и уличная одежда</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --white:#FFFFFF; --ink:#0B0B10; --blue:#1E4FFF; --sky:#5BC6FF;
+    --sky-soft:#EAF6FF; --grey:#F4F5F7; --line:#E8EAEE; --radius:18px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth;background:var(--white)}
+  body{font-family:'Manrope',sans-serif;background:transparent;color:var(--ink);line-height:1.6;overflow-x:hidden}
+  h1,h2,h3{font-family:'Unbounded',sans-serif;line-height:1.15}
+  a{text-decoration:none;color:inherit}
+  button{font-family:'Manrope',sans-serif;cursor:pointer}
+  img{max-width:100%}
+  .container{max-width:1240px;margin:0 auto;padding:0 24px}
+  :focus-visible{outline:3px solid var(--sky);outline-offset:3px;border-radius:4px}
+  .hidden{display:none!important}
+  /* пока открыто окно товара/корзина — прячем шапку (Safari рисует backdrop-filter поверх) */
+  body.modal-open header{visibility:hidden}
+
+  /* ===== ШАПКА ===== */
+  header{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.93);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:76px;gap:12px}
+  .logo{display:flex;align-items:center;gap:12px}
+  .logo-name{font-family:'Unbounded',sans-serif;font-weight:900;font-size:1.2rem;letter-spacing:-.02em}
+  .logo-name span{color:var(--blue)}
+  .nav-links{display:flex;gap:28px;font-weight:600;font-size:.95rem}
+  .nav-links a{position:relative;padding:4px 0;transition:color .2s}
+  .nav-links a::after{content:'';position:absolute;left:0;bottom:-2px;width:0;height:2px;background:var(--blue);transition:width .25s}
+  .nav-links a:hover,.nav-links a.active{color:var(--blue)}
+  .nav-links a:hover::after,.nav-links a.active::after{width:100%}
+  .cart-btn{display:flex;align-items:center;gap:8px;background:var(--ink);color:var(--white);padding:11px 20px;border-radius:999px;font-weight:700;font-size:.9rem;border:none;transition:background .2s,transform .15s}
+  .cart-btn:hover{background:var(--blue);transform:translateY(-1px)}
+  .cart-btn b{background:var(--sky);color:var(--ink);min-width:22px;height:22px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-size:.78rem;padding:0 6px}
+  .burger{display:none;background:none;border:none;padding:8px}
+  .burger span{display:block;width:24px;height:2.5px;background:var(--ink);margin:5px 0;border-radius:2px}
+
+  /* ===== ГЕРОЙ ===== */
+  .hero{position:relative;background:var(--ink);color:var(--white);overflow:hidden}
+  .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 85% 20%, rgba(30,79,255,.45), transparent 60%),radial-gradient(ellipse 50% 60% at 70% 90%, rgba(91,198,255,.25), transparent 60%)}
+  .hero-inner{position:relative;display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;padding:80px 0 96px}
+  .hero-eyebrow{display:inline-flex;align-items:center;gap:10px;color:var(--sky);font-weight:700;font-size:.85rem;letter-spacing:.18em;text-transform:uppercase;margin-bottom:22px}
+  .hero-eyebrow::before{content:'';width:34px;height:2px;background:var(--sky)}
+  .hero h1{font-size:clamp(2.2rem,5.5vw,4rem);font-weight:900;letter-spacing:-.02em;margin-bottom:24px}
+  .hero h1 em{font-style:normal;color:transparent;-webkit-text-stroke:1.5px var(--sky)}
+  .hero p{color:#C6CBD6;font-size:1.08rem;max-width:480px;margin-bottom:36px}
+  .hero-actions{display:flex;gap:16px;flex-wrap:wrap}
+  .btn-primary{background:var(--blue);color:var(--white);padding:15px 32px;border-radius:999px;font-weight:800;font-size:1rem;border:none;display:inline-block;transition:transform .15s,box-shadow .2s;box-shadow:0 8px 30px rgba(30,79,255,.45)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 38px rgba(30,79,255,.6)}
+  .btn-ghost{padding:15px 32px;border-radius:999px;font-weight:800;font-size:1rem;border:2px solid rgba(255,255,255,.35);color:var(--white);background:transparent;transition:border-color .2s,background .2s}
+  .btn-ghost:hover{border-color:var(--sky);background:rgba(91,198,255,.1)}
+  .hero-art{display:flex;justify-content:center;min-width:0}
+  .hero-carousel{position:relative;width:100%;max-width:520px;aspect-ratio:72/46;z-index:0;isolation:isolate}
+  .hero-slide{position:absolute;inset:0;transition:transform .8s cubic-bezier(.4,0,.2,1),opacity .8s ease;will-change:transform}
+  .hero-slide.pos-front{transform:translateX(0) scale(1);opacity:1;z-index:3}
+  .hero-slide.pos-right{transform:translateX(40%) scale(.55);opacity:.45;z-index:1}
+  .hero-slide.pos-left{transform:translateX(-40%) scale(.55);opacity:.45;z-index:1}
+  .hero-slide svg{width:100%;height:100%;filter:drop-shadow(0 30px 60px rgba(30,79,255,.35))}
+  .float{animation:float 5s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
+
+  /* === ГЕРОЙ: свечение за курсором + кинетический вход === */
+  .hero-glow{position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(circle 340px at 80% 30%,rgba(91,198,255,.20),transparent 60%);transition:background .2s}
+  .hero-title .line{display:block;overflow:hidden;padding-bottom:.05em}
+  .hero-title .line-in{display:inline-block;transform:translateY(115%);animation:lineUp .85s cubic-bezier(.16,1,.3,1) both}
+  .hero-title .line:nth-child(2) .line-in{animation-delay:.1s}
+  @keyframes lineUp{to{transform:translateY(0)}}
+  .hero-eyebrow{opacity:0;animation:riseFade .7s ease .04s both}
+  #heroSub{opacity:0;animation:riseFade .7s ease .3s both}
+  .hero-actions{opacity:0;animation:riseFade .7s ease .46s both}
+  @keyframes riseFade{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+
+  /* === КНОПКИ: shine-блик === */
+  .btn-primary,.checkout-btn,.cart-btn{position:relative;overflow:hidden}
+  .btn-primary::after,.checkout-btn::after,.cart-btn::after{content:'';position:absolute;top:0;left:-65%;width:45%;height:100%;background:linear-gradient(120deg,transparent,rgba(255,255,255,.45),transparent);transform:skewX(-20deg);transition:left .6s ease;pointer-events:none}
+  .btn-primary:hover::after,.checkout-btn:hover::after,.cart-btn:hover::after{left:125%}
+
+  /* === ШТОРКА ПЕРЕХОДА === */
+  .page-curtain{position:fixed;inset:0;z-index:500;background:var(--blue);transform:translateX(-100%);pointer-events:none;display:flex;align-items:center;justify-content:center}
+  .page-curtain.wipe{animation:pageWipe .9s cubic-bezier(.7,0,.3,1) forwards}
+  .page-curtain span{font-family:'Unbounded',sans-serif;font-weight:900;color:#fff;font-size:clamp(1.6rem,5vw,3rem);letter-spacing:.08em;text-transform:uppercase;opacity:0}
+  .page-curtain.wipe span{animation:curtainLabel .9s ease forwards}
+  @keyframes pageWipe{0%{transform:translateX(-100%)}42%{transform:translateX(0)}58%{transform:translateX(0)}100%{transform:translateX(101%)}}
+  @keyframes curtainLabel{0%,100%{opacity:0}35%,55%{opacity:.95}}
+  @keyframes ghostL{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  @keyframes ghostR{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+
+  .marquee{background:var(--blue);color:var(--white);overflow:hidden;white-space:nowrap;padding:13px 0;border-top:1px solid rgba(255,255,255,.15)}
+  .marquee-track{display:inline-block;animation:scroll 22s linear infinite;font-family:'Unbounded',sans-serif;font-weight:700;font-size:.9rem;letter-spacing:.12em}
+  .marquee-track span{margin:0 26px}
+  .marquee-track .dot{color:var(--sky)}
+  @keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  section{padding:80px 0}
+  .section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:42px;flex-wrap:wrap}
+  .section-head h2{font-size:clamp(1.6rem,3.5vw,2.3rem);font-weight:900;letter-spacing:-.02em}
+  .tag{color:var(--blue);font-weight:700;font-size:.8rem;letter-spacing:.18em;text-transform:uppercase;margin-bottom:10px;display:block}
+  .link-arrow{font-weight:800;color:var(--blue);background:none;border:none;font-size:1rem;display:flex;align-items:center;gap:6px;transition:gap .2s}
+  .link-arrow:hover{gap:11px}
+
+  /* категории */
+  .cats{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .cat{position:relative;border:none;text-align:left;border-radius:var(--radius);overflow:hidden;padding:34px 28px;min-height:210px;display:flex;flex-direction:column;justify-content:flex-end;color:var(--white);transition:transform .25s,box-shadow .25s}
+  .cat:hover{transform:translateY(-6px);box-shadow:0 18px 44px rgba(11,11,16,.18)}
+  .cat h3{font-size:1.3rem;font-weight:700;margin-bottom:6px}
+  .cat p{font-size:.92rem;opacity:.85}
+  .cat .num{position:absolute;top:22px;right:26px;font-family:'Unbounded',sans-serif;font-weight:900;font-size:.8rem;opacity:.7;letter-spacing:.1em}
+  .cat-1{background:linear-gradient(145deg,#0B0B10 30%,#1E4FFF 130%)}
+  .cat-2{background:linear-gradient(145deg,#1E4FFF 10%,#5BC6FF 120%)}
+  .cat-3{background:linear-gradient(145deg,#13151C 20%,#3A7BFF 140%)}
+
+  /* карточки товаров */
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
+  .card{background:var(--white);border-radius:var(--radius);overflow:hidden;transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .25s;display:flex;flex-direction:column;border:1px solid var(--line);will-change:transform}
+  .card:hover{transform:translateY(-4px);box-shadow:0 18px 44px rgba(11,11,16,.12)}
+  .card-img{position:relative;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;background:var(--white)}
+  .card-img img{width:100%;height:100%;object-fit:contain;transition:transform .35s}
+  .card:hover .card-img img{transform:scale(1.06)}
+  .card-body{padding:16px;display:flex;flex-direction:column;gap:5px;flex:1}
+  .card-cat{font-size:.72rem;font-weight:700;color:#8B90A0;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card-title{font-family:'Manrope',sans-serif;font-weight:800;font-size:.92rem;line-height:1.35;cursor:pointer;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.7em}
+  .card-title:hover{color:var(--blue)}
+  .card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:10px}
+  .price{font-family:'Unbounded',sans-serif;font-weight:700;font-size:.95rem}
+  .price-from{font-size:.7rem;color:#8B90A0;font-weight:600;display:block;font-family:'Manrope',sans-serif}
+  .add-btn{width:40px;height:40px;border-radius:50%;background:var(--sky-soft);color:var(--blue);border:none;font-size:1.35rem;font-weight:600;line-height:1;flex-shrink:0;transition:background .2s,color .2s,transform .15s}
+  .add-btn:hover{background:var(--blue);color:var(--white);transform:scale(1.08)}
+
+  /* ===== КАТАЛОГ ===== */
+  .catalog-layout{display:grid;grid-template-columns:280px 1fr;gap:32px;align-items:start}
+  .filters{background:var(--grey);border-radius:var(--radius);padding:24px;position:sticky;top:96px;max-height:calc(100vh - 120px);overflow-y:auto}
+  .f-group{padding:16px 0;border-bottom:1px solid var(--line)}
+  .f-group:first-child{padding-top:0}
+  .f-group:last-of-type{border-bottom:none}
+  .f-title{font-weight:800;font-size:.88rem;margin-bottom:12px}
+  .check{display:flex;align-items:center;gap:10px;padding:4px 0;font-size:.9rem;font-weight:500;cursor:pointer;user-select:none}
+  .check input{accent-color:var(--blue);width:16px;height:16px;cursor:pointer;flex-shrink:0}
+  .check .lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .check .cnt{margin-left:auto;color:#A3A8B8;font-size:.78rem;flex-shrink:0}
+  .sub-checks{padding-left:24px}
+  .model-list{padding-left:28px;margin:2px 0 8px;border-left:2px solid var(--sky);margin-left:8px}
+  .model-list .check{font-size:.86rem}
+  .model-list .lbl{color:#5B6070}
+  .model-note{font-size:.74rem;font-weight:700;color:#8B90A0;padding:4px 0 2px 10px}
+  .sizes-wrap{display:flex;flex-wrap:wrap;gap:7px}
+  .size-chip{border:1.5px solid var(--line);background:var(--white);border-radius:9px;padding:6px 10px;font-size:.83rem;font-weight:700;transition:all .15s}
+  .size-chip:hover{border-color:var(--blue)}
+  .size-chip.on{background:var(--blue);border-color:var(--blue);color:var(--white)}
+  .size-chip:disabled{opacity:.35;cursor:not-allowed;text-decoration:line-through}
+  .size-sub{font-size:.74rem;font-weight:800;color:#8B90A0;text-transform:uppercase;letter-spacing:.06em;margin:10px 0 7px}
+  .price-inputs{display:flex;gap:10px;align-items:center}
+  .price-inputs input{width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;font-family:'Manrope',sans-serif;font-size:.9rem;font-weight:600}
+  .price-inputs input:focus{outline:none;border-color:var(--blue)}
+  .brand-search{width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;font-family:'Manrope',sans-serif;font-size:.88rem;font-weight:500;margin-bottom:10px}
+  .brand-search:focus{outline:none;border-color:var(--blue)}
+  .brand-list{max-height:220px;overflow-y:auto}
+  .reset-btn{width:100%;margin-top:18px;padding:12px;border-radius:12px;border:none;background:var(--ink);color:var(--white);font-weight:700;font-size:.9rem;transition:background .2s}
+  .reset-btn:hover{background:var(--blue)}
+
+  .catalog-top{display:flex;gap:14px;align-items:center;margin-bottom:24px;flex-wrap:wrap}
+  .search-box{flex:1;min-width:220px;position:relative}
+  .search-box input{width:100%;padding:13px 18px 13px 44px;border:1.5px solid var(--line);border-radius:999px;font-family:'Manrope',sans-serif;font-size:.95rem;font-weight:500}
+  .search-box input:focus{outline:none;border-color:var(--blue)}
+  .search-box svg{position:absolute;left:16px;top:50%;transform:translateY(-50%)}
+  .sort-select{padding:13px 44px 13px 18px;border:1.5px solid var(--line);border-radius:999px;font-family:'Manrope',sans-serif;font-size:.9rem;font-weight:700;background:var(--white);cursor:pointer;
+    -webkit-appearance:none;-moz-appearance:none;appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%230B0B10' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 18px center}
+  .sort-select:focus{outline:none;border-color:var(--blue)}
+  .result-count{color:#8B90A0;font-size:.9rem;font-weight:600}
+  .catalog-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  .empty-state{text-align:center;padding:80px 20px;color:#8B90A0}
+  .empty-state h3{color:var(--ink);margin-bottom:10px}
+  .filters-toggle{display:none;width:100%;margin-bottom:16px;padding:13px;border-radius:12px;border:1.5px solid var(--line);background:var(--white);font-weight:700;font-size:.95rem}
+  .load-more{display:block;margin:36px auto 0;padding:15px 44px;border-radius:999px;border:2px solid var(--ink);background:var(--white);font-weight:800;font-size:.98rem;transition:all .2s}
+  .load-more:hover{background:var(--ink);color:var(--white)}
+  .active-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+  .a-chip{display:inline-flex;align-items:center;gap:7px;background:var(--sky-soft);color:var(--blue);font-weight:700;font-size:.82rem;padding:7px 13px;border-radius:999px;border:none}
+  .a-chip:hover{background:#d8eeff}
+
+  /* ===== МОДАЛКА ТОВАРА ===== */
+  .overlay{position:fixed;inset:0;background:rgba(11,11,16,.5);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s}
+  .overlay.show{opacity:1;pointer-events:auto}
+  .modal{background:var(--white);border-radius:22px;max-width:780px;width:100%;max-height:90vh;overflow-y:auto;overflow-x:hidden;display:grid;grid-template-columns:1fr 1fr;transform:scale(.9);opacity:0;transition:transform .36s cubic-bezier(.34,1.3,.5,1),opacity .3s}
+  .overlay.show .modal{transform:scale(1);opacity:1}
+  .modal-img{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:24px;min-height:320px;background:var(--white)}
+  .modal-img img{width:100%;max-height:380px;object-fit:contain;transform-origin:center center;transition:transform .25s ease}
+  .modal-img.zoom-on{cursor:zoom-in}
+  .modal-img.zoom-on img{transition:transform .08s ease}
+  .zoom-btn{position:absolute;left:16px;bottom:16px;z-index:3;display:inline-flex;align-items:center;gap:7px;background:var(--white);border:1.5px solid var(--line);border-radius:999px;padding:8px 15px;font-family:'Manrope',sans-serif;font-weight:700;font-size:.8rem;color:var(--ink);cursor:pointer;box-shadow:0 5px 16px rgba(11,11,16,.12);transition:border-color .2s,color .2s,background .2s}
+  .zoom-btn:hover{border-color:var(--blue);color:var(--blue)}
+  .zoom-btn.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .modal-gallery{display:flex;flex-direction:column}
+  .modal-thumbs{display:flex;gap:8px;padding:0 24px 20px;flex-wrap:wrap}
+  .thumb{width:54px;height:54px;border-radius:10px;border:2px solid var(--line);background:var(--white);padding:3px;overflow:hidden;transition:border-color .2s}
+  .thumb img{width:100%;height:100%;object-fit:contain}
+  .thumb:hover{border-color:var(--sky)}
+  .thumb.on{border-color:var(--blue)}
+  .modal-info{padding:28px 28px 28px 4px;display:flex;flex-direction:column;gap:13px;min-width:0}
+  .modal-info h3{font-family:'Manrope',sans-serif;font-size:1.12rem;font-weight:800;line-height:1.4}
+  .modal-close{position:absolute;top:14px;right:14px;width:40px;height:40px;border-radius:50%;border:none;background:rgba(11,11,16,.08);font-size:1.05rem;font-weight:700;transition:background .2s;z-index:5}
+  .modal-close:hover{background:rgba(11,11,16,.16)}
+  .modal-wrap{position:relative;max-width:780px;width:100%}
+  .size-label{font-weight:800;font-size:.82rem;text-transform:uppercase;letter-spacing:.08em}
+  .size-hint{color:#E5484D;font-size:.82rem;font-weight:600;display:none}
+  .size-hint.show{display:block}
+  .modal-price{font-family:'Unbounded',sans-serif;font-weight:900;font-size:1.45rem}
+  .modal-sizes{display:flex;flex-wrap:wrap;gap:8px;max-height:170px;overflow-y:auto}
+  .price-chip{display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.25;padding:6px 11px}
+  .price-chip small{font-size:.66rem;font-weight:600;color:#8B90A0}
+  .price-chip.on small{color:rgba(255,255,255,.85)}
+  .chart-toggle{align-self:flex-start;background:none;border:none;color:var(--blue);font-weight:800;font-size:.88rem;padding:0;transition:opacity .2s}
+  .chart-toggle:hover{opacity:.75}
+  .size-chart{border:1.5px solid var(--line);border-radius:12px;overflow:hidden;max-width:100%;min-width:0}
+  .chart-scroll{overflow:auto;max-height:190px}
+  .size-chart table{border-collapse:collapse;font-size:.78rem;white-space:nowrap;width:100%}
+  .size-chart th{position:sticky;left:0;background:var(--grey);text-align:left;padding:7px 11px;font-weight:800;z-index:1}
+  .size-chart td{padding:7px 11px;border-left:1px solid var(--line);text-align:center;font-weight:500}
+  .size-chart tr+tr th,.size-chart tr+tr td{border-top:1px solid var(--line)}
+
+  /* ===== КОРЗИНА ===== */
+  .cart-overlay{position:fixed;inset:0;background:rgba(11,11,16,.5);z-index:300;opacity:0;pointer-events:none;transition:opacity .25s}
+  .cart-overlay.show{opacity:1;pointer-events:auto}
+  .cart-drawer{position:fixed;top:0;right:0;bottom:0;width:min(450px,100%);background:var(--white);z-index:301;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:-20px 0 60px rgba(11,11,16,.2)}
+  .cart-drawer.show{transform:translateX(0)}
+  .cart-head{display:flex;align-items:center;justify-content:space-between;padding:22px 24px;border-bottom:1px solid var(--line)}
+  .cart-head h3{font-size:1.1rem;font-weight:700}
+  .cart-items{flex:1;overflow-y:auto;padding:10px 24px}
+  .cart-item{display:grid;grid-template-columns:74px 1fr auto;gap:13px;padding:15px 0;border-bottom:1px solid var(--line);align-items:center}
+  .ci-img{width:74px;height:74px;border-radius:13px;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid var(--line)}
+  .ci-img img{width:100%;height:100%;object-fit:contain}
+  .ci-name{font-weight:800;font-size:.86rem;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .ci-meta{font-size:.78rem;color:#8B90A0;font-weight:600;margin-top:3px}
+  .ci-price{font-family:'Unbounded',sans-serif;font-weight:700;font-size:.88rem;margin-top:5px}
+  .ci-right{display:flex;flex-direction:column;align-items:flex-end;gap:9px}
+  .qty{display:flex;align-items:center;gap:2px;background:var(--grey);border-radius:999px;padding:3px}
+  .qty button{width:27px;height:27px;border-radius:50%;border:none;background:transparent;font-size:1rem;font-weight:700;transition:background .15s}
+  .qty button:hover{background:var(--white)}
+  .qty span{min-width:25px;text-align:center;font-weight:800;font-size:.88rem}
+  .ci-remove{background:none;border:none;color:#A3A8B8;font-size:.78rem;font-weight:700;transition:color .2s}
+  .ci-remove:hover{color:#E5484D}
+  .cart-foot{padding:20px 24px;border-top:1px solid var(--line);background:var(--grey)}
+  .cart-total{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+  .cart-total span{font-weight:700;color:#5B6070}
+  .cart-total b{font-family:'Unbounded',sans-serif;font-size:1.25rem;font-weight:900}
+  .checkout-btn{width:100%;padding:16px;border:none;border-radius:999px;background:var(--blue);color:var(--white);font-weight:800;font-size:1rem;transition:background .2s,transform .15s}
+  .checkout-btn:hover{background:#1640d6;transform:translateY(-1px)}
+  .cart-empty{text-align:center;padding:60px 20px;color:#8B90A0}
+  .cart-empty svg{margin-bottom:16px;opacity:.5}
+
+  .checkout-form{display:flex;flex-direction:column;gap:12px;padding:0 4px}
+  .pass-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--blue);font-weight:700;font-size:.78rem;cursor:pointer;padding:6px 8px}
+  .checkout-form label{font-weight:800;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em}
+  .checkout-form input,.checkout-form select{padding:13px 16px;border:1.5px solid var(--line);border-radius:12px;font-family:'Manrope',sans-serif;font-size:.95rem;font-weight:500;width:100%}
+  .checkout-form input:focus,.checkout-form select:focus{outline:none;border-color:var(--blue)}
+  .form-err{border-color:#E5484D!important}
+  .order-success{text-align:center;padding:30px 10px}
+  .order-success .big{font-size:3rem;margin-bottom:12px}
+  .order-success h3{margin-bottom:10px}
+  .order-success p{color:#5B6070}
+  .order-num{display:inline-block;margin-top:14px;background:var(--sky-soft);color:var(--blue);font-family:'Unbounded',sans-serif;font-weight:700;padding:10px 22px;border-radius:999px}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,80px);background:var(--ink);color:var(--white);padding:14px 26px;border-radius:999px;font-weight:700;font-size:.9rem;z-index:400;opacity:0;transition:all .3s;display:flex;align-items:center;gap:10px;box-shadow:0 12px 40px rgba(11,11,16,.3);max-width:90vw}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .toast .dot{color:var(--sky)}
+  .toast span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* преимущества */
+  /* карусель «Популярное сейчас» */
+  .feat-nav{display:flex;align-items:center;gap:8px}
+  .feat-controls{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:18px}
+  .feat-arrow{width:42px;height:42px;border-radius:50%;border:1.5px solid var(--line);background:var(--white);font-size:1.5rem;line-height:1;color:var(--ink);display:flex;align-items:center;justify-content:center;transition:all .2s}
+  .feat-arrow:hover:not(:disabled){border-color:var(--blue);color:var(--blue);transform:translateY(-1px)}
+  .feat-arrow:disabled{opacity:.35;cursor:default}
+  .feat-viewport{position:relative}
+  .feat-stage{position:relative;height:480px;overflow:hidden;z-index:0;isolation:isolate}
+  .feat-stage .card{position:absolute;top:0;left:50%;width:300px;margin-left:-150px;transform-origin:center top;
+    transition:transform .6s cubic-bezier(.4,0,.2,1),opacity .6s ease;will-change:transform,opacity}
+
+  /* информационные страницы */
+  .info-page{max-width:780px}
+  .info-page h2{font-size:clamp(1.6rem,3.5vw,2.3rem);font-weight:900;letter-spacing:-.02em;margin-bottom:28px}
+  .info-card{border:1.5px solid var(--line);border-radius:var(--radius);padding:26px 28px;margin-bottom:18px;transition:border-color .25s}
+  .info-card:hover{border-color:var(--blue)}
+  .info-card.highlight{background:var(--sky-soft);border-color:var(--sky)}
+  .info-card h3{font-size:1.1rem;font-weight:800;margin-bottom:10px}
+  .info-card p{color:#3a4050;font-size:.98rem}
+  .info-page .btn-primary{margin-top:14px}
+  .inline-link{color:var(--blue);font-weight:700}
+  .inline-link:hover{text-decoration:underline}
+
+  /* ===== ЛИЧНЫЙ КАБИНЕТ + ЛОЯЛЬНОСТЬ ===== */
+  .acc-btn{display:flex;align-items:center;gap:8px;background:var(--white);color:var(--ink);padding:10px 16px;border-radius:999px;font-weight:700;font-size:.9rem;border:1.5px solid var(--line);transition:border-color .2s,color .2s,transform .15s}
+  .acc-btn:hover{border-color:var(--blue);color:var(--blue);transform:translateY(-1px)}
+  .acc-btn svg{width:18px;height:18px}
+  .acc-word{display:inline}
+  .acc-wrap{max-width:940px}
+  .acc-hero{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:6px}
+  .acc-logout{background:none;border:1.5px solid var(--line);color:#5B6070;font-weight:700;font-size:.85rem;padding:9px 18px;border-radius:999px;transition:border-color .2s,color .2s}
+  .acc-logout:hover{border-color:#E5484D;color:#E5484D}
+  .acc-grid{display:grid;grid-template-columns:1.25fr 1fr;gap:18px;margin-top:24px}
+  .lc{border:1.5px solid var(--line);border-radius:var(--radius);padding:24px}
+  .loyal-card{position:relative;overflow:hidden;color:#fff;border:none;background:linear-gradient(135deg,#1E4FFF 0%,#0B0B10 100%)}
+  .loyal-card::after{content:'';position:absolute;right:-50px;top:-50px;width:210px;height:210px;border-radius:50%;background:radial-gradient(circle,rgba(91,198,255,.55),transparent 70%);z-index:1}
+  .tier-bar{height:10px;border-radius:999px;background:rgba(255,255,255,.22);overflow:hidden;margin-top:16px}
+  .tier-bar>i{display:block;height:100%;background:var(--sky);border-radius:999px;transition:width .9s cubic-bezier(.16,1,.3,1)}
+  .tiers{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+  .tier-pill{border:1.5px solid var(--line);border-radius:14px;padding:14px 10px;text-align:center;font-size:.8rem;transition:border-color .2s,background .2s}
+  .tier-pill.on{border-color:var(--blue);background:var(--sky-soft)}
+  .tier-pill .ti{font-size:1.5rem;display:block;margin-bottom:4px}
+  .tier-pill b{display:block;font-family:'Unbounded',sans-serif;font-size:.76rem;margin-bottom:3px}
+  .order-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
+  .order-row:last-child{border-bottom:none}
+  @media(max-width:760px){.acc-grid{grid-template-columns:1fr}}
+  @media(max-width:560px){.tiers{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:640px){.acc-word{display:none}}
+
+  .perks{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .perk{border:1.5px solid var(--line);border-radius:var(--radius);padding:32px 26px;transition:border-color .25s,transform .25s}
+  .perk:hover{border-color:var(--blue);transform:translateY(-4px)}
+  .perk-icon{width:52px;height:52px;border-radius:14px;background:var(--sky-soft);display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+  .perk h3{font-size:1.02rem;font-weight:700;margin-bottom:8px}
+  .perk p{color:#5B6070;font-size:.93rem}
+
+  footer{background:var(--ink);color:#C6CBD6;padding:60px 0 32px;margin-top:80px}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:40px;margin-bottom:44px}
+  .foot-grid h4{color:var(--white);font-weight:800;margin-bottom:16px;font-size:.95rem}
+  .foot-grid a{display:block;margin-bottom:10px;font-size:.9rem;transition:color .2s;background:none;border:none;color:#C6CBD6;text-align:left;font-family:'Manrope',sans-serif;cursor:pointer}
+  .foot-grid a:hover{color:var(--sky)}
+  .foot-about p{font-size:.9rem;margin-top:16px;max-width:280px}
+  .foot-bottom{border-top:1px solid rgba(255,255,255,.12);padding-top:24px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:.85rem;color:#8B90A0}
+
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .6s ease,transform .6s ease}  .reveal.visible{opacity:1;transform:translateY(0)}
+
+  /* ===== ФОНОВАЯ АНИМАЦИЯ: ghost-логотип ===== */
+  .bg-decor{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:2.5vh}
+  .ghost-row{white-space:nowrap;font-family:'Unbounded',sans-serif;font-weight:900;font-size:clamp(3.4rem,10vw,8rem);text-transform:uppercase;line-height:1;will-change:transform}
+  .ghost-row span{display:inline-block;padding:0 .35em}
+  .gr1{animation:ghostL 70s linear infinite;color:transparent;-webkit-text-stroke:1.5px rgba(30,79,255,.13)}
+  .gr2{animation:ghostR 90s linear infinite;color:transparent;-webkit-text-stroke:1.5px rgba(91,198,255,.16)}
+  .gr3{animation:ghostL 80s linear infinite;color:transparent;-webkit-text-stroke:1.5px rgba(30,79,255,.10)}
+  @media(prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+    .reveal{opacity:1;transform:none}
+    .hero-title .line-in,.hero-eyebrow,#heroSub,.hero-actions{opacity:1!important;transform:none!important}
+    .bg-decor{display:none}
+  }
+
+  @media(max-width:1000px){
+    .catalog-grid{grid-template-columns:repeat(2,1fr)}
+    .grid{grid-template-columns:repeat(2,1fr)}
+    .hero-inner{grid-template-columns:1fr;padding:56px 0 72px;text-align:center}
+    .hero p{margin-left:auto;margin-right:auto}
+    .hero-actions{justify-content:center}
+    .hero-art{order:-1}
+    .hero-carousel{max-width:300px}
+    .cats,.perks{grid-template-columns:1fr 1fr}
+    .foot-grid{grid-template-columns:1fr 1fr}
+    .modal{grid-template-columns:1fr;max-width:440px}
+    .modal-info{padding:4px 26px 26px}
+    .modal-img{min-height:240px}
+  }
+  @media(max-width:760px){
+    .catalog-layout{grid-template-columns:1fr}
+    .filters{position:static;display:none;max-height:none}
+    .filters.open{display:block}
+    .filters-toggle{display:block}
+  }
+  @media(max-width:640px){
+    .nav-links{display:none;position:absolute;top:76px;left:0;right:0;background:var(--white);flex-direction:column;gap:0;border-bottom:1px solid var(--line);padding:8px 24px 16px}
+    .nav-links.open{display:flex}
+    .nav-links a{padding:13px 0}
+    .burger{display:block}
+    .cart-btn .cart-word{display:none}
+    .cart-btn{padding:11px 14px}
+    .grid,.catalog-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+    .feat-stage{height:400px}
+    .feat-stage .card{width:230px;margin-left:-115px}
+    .cats,.perks{grid-template-columns:1fr}
+    section{padding:56px 0}
+  }
+</style>
+</head>
+<body>
+
+<!-- фоновая анимация -->
+<div class="bg-decor" aria-hidden="true">
+  <div class="ghost-row gr1"><span>ARHOSHOP · ORIGINAL · </span><span>ARHOSHOP · ORIGINAL · </span></div>
+  <div class="ghost-row gr2"><span>SNEAKERS · STREETWEAR · </span><span>SNEAKERS · STREETWEAR · </span></div>
+  <div class="ghost-row gr3"><span>ТОЛЬКО ОРИГИНАЛ · POIZON · </span><span>ТОЛЬКО ОРИГИНАЛ · POIZON · </span></div>
+</div>
+<div class="page-curtain" id="pageCurtain" aria-hidden="true"><span>ArhoShop</span></div>
+
+<!-- ===== ШАПКА ===== -->
+<header>
+  <div class="container nav">
+    <a href="#" class="logo" onclick="goHome(event)" aria-label="ArhoShop — на главную">
+      <svg width="42" height="42" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Логотип ArhoShop">
+        <rect width="64" height="64" rx="16" fill="#0B0B10"/>
+        <path d="M14 50 L29 14 L35 14 L24.5 50 Z" fill="#FFFFFF"/>
+        <path d="M31 14 L37 14 L52 50 L42 50 Z" fill="#1E4FFF"/>
+        <path d="M24 36 H44 L46 41 H22 Z" fill="#5BC6FF"/>
+        <path d="M12 55 H30 L28.5 59 H10.5 Z" fill="#5BC6FF" opacity=".9"/>
+        <path d="M36 55 H54 L52.5 59 H34.5 Z" fill="#1E4FFF" opacity=".9"/>
+      </svg>
+      <span class="logo-name">Arho<span>Shop</span></span>
+    </a>
+    <nav class="nav-links" id="navLinks">
+      <a href="#" id="navHome" onclick="goHome(event)">Главная</a>
+      <a href="#" id="navCatalog" onclick="goCatalog(event)">Каталог</a>
+      <a href="#" onclick="goCatalog(event,'Кроссовки')">Кроссовки</a>
+      <a href="#" onclick="goCatalog(event,'Одежда')">Одежда</a>
+      <a href="#" id="navAccount" onclick="goAccount(event)">Кабинет</a>
+      <a href="#contacts" onclick="document.getElementById('navLinks').classList.remove('open')">Контакты</a>
+    </nav>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="acc-btn" id="accBtn" onclick="goAccount(event)" aria-label="Личный кабинет">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"></path></svg>
+        <span class="acc-word" id="accBtnLabel">Кабинет</span>
+      </button>
+      <button class="cart-btn" onclick="openCart()">
+        🛒 <span class="cart-word">Корзина</span> <b id="cartCount">0</b>
+      </button>
+      <button class="burger" id="burger" aria-label="Меню">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ============ ГЛАВНАЯ ============ -->
+<main id="pageHome">
+
+  <div class="hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container hero-inner">
+      <div>
+        <span class="hero-eyebrow">Кроссовки · Стритвир · Оригинал</span>
+        <h1 class="hero-title"><span class="line"><span class="line-in">Шаг, который</span></span><span class="line"><span class="line-in"><em>заметят</em></span></span></h1>
+        <p id="heroSub">ArhoShop — тысячи пар кроссовок и позиций одежды от культовых брендов. Только оригинал с Poizon, доставка по всей стране.</p>
+        <div class="hero-actions">
+          <button class="btn-primary" onclick="goCatalog(event)">Смотреть каталог</button>
+          <button class="btn-ghost" onclick="goCatalog(event,'Кроссовки')">К кроссовкам</button>
+        </div>
+      </div>
+      <div class="hero-art">
+        <div class="hero-carousel">
+            <div class="hero-slide pos-front">
+              <svg class="float" viewBox="0 0 720 460" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Высокий кроссовок ArhoShop">
+            <defs>
+            <clipPath id="ajClip">
+              <path d="M70 356 C68 330 78 308 102 298 C128 288 154 284 180 278 C224 268 264 252 300 232 C322 220 338 204 348 184 C356 166 360 146 364 124 C368 104 380 92 398 92 C418 92 436 98 452 110 C470 122 488 130 508 136 C540 148 568 166 588 192 C606 218 614 280 614 356 Z"/>
+            </clipPath>
+          </defs>
+          <ellipse cx="345" cy="432" rx="290" ry="11" fill="#5BC6FF" opacity=".14"/>
+          <!-- межподошва -->
+          <path d="M52 372 C44 362 50 352 68 350 L620 350 C642 350 654 358 654 370 C654 382 642 390 622 391 L120 394 C90 394 64 388 52 372 Z" fill="#FFFFFF"/>
+          <path d="M88 362 L628 360" stroke="#D8DEE9" stroke-width="2" stroke-dasharray="2 8" stroke-linecap="round"/>
+          <!-- подошва -->
+          <path d="M60 376 C80 386 104 391 132 392 L608 389 C626 388 638 383 646 375" stroke="#1E4FFF" stroke-width="9" stroke-linecap="round" fill="none"/>
+          <path d="M134 392 L138 384 M184 392 L188 384 M234 391 L238 383 M284 391 L288 383 M334 390 L338 382 M384 390 L388 382 M434 390 L438 382 M484 389 L488 381 M534 389 L538 381 M584 389 L588 381" stroke="#0B0B10" stroke-opacity=".25" stroke-width="4" stroke-linecap="round"/>
+          <!-- верх -->
+          <path d="M70 356 C68 330 78 308 102 298 C128 288 154 284 180 278 C224 268 264 252 300 232 C322 220 338 204 348 184 C356 166 360 146 364 124 C368 104 380 92 398 92 C418 92 436 98 452 110 C470 122 488 130 508 136 C540 148 568 166 588 192 C606 218 614 280 614 356 Z" fill="#FFFFFF"/>
+          <g clip-path="url(#ajClip)">
+            <!-- мыс-накладка -->
+            <path d="M-20 420 L-20 240 C50 270 122 286 184 282 C180 310 166 334 148 358 L142 420 Z" fill="#1E4FFF"/>
+            <path d="M184 282 C180 310 166 334 148 358" stroke="#FFFFFF" stroke-opacity=".6" stroke-width="2.5" stroke-dasharray="6 5" fill="none"/>
+            <!-- перфорация на носке -->
+            <g fill="#C9D2E0">
+              <circle cx="208" cy="296" r="3"/><circle cx="226" cy="290" r="3"/><circle cx="244" cy="284" r="3"/><circle cx="262" cy="277" r="3"/>
+              <circle cx="214" cy="312" r="3"/><circle cx="232" cy="306" r="3"/><circle cx="250" cy="300" r="3"/><circle cx="268" cy="293" r="3"/>
+              <circle cx="220" cy="328" r="3"/><circle cx="238" cy="322" r="3"/><circle cx="256" cy="316" r="3"/><circle cx="274" cy="309" r="3"/>
+            </g>
+            <!-- планка шнуровки: высокая дуга -->
+            <path d="M296 240 C318 226 334 208 344 186 C352 168 356 148 360 126 C364 108 374 98 390 96 L420 96 C404 100 396 110 392 128 C388 150 384 172 374 192 C362 216 344 236 322 252 Z" fill="#1E4FFF"/>
+            <path d="M296 240 C318 226 334 208 344 186 C352 168 356 148 360 126" stroke="#FFFFFF" stroke-opacity=".5" stroke-width="2" fill="none"/>
+            <!-- воротник -->
+            <path d="M386 90 C412 90 434 100 452 112 C472 126 492 134 514 140 C540 147 562 158 582 174 L568 204 C546 188 522 176 498 168 C474 160 452 148 434 136 C416 124 400 112 382 104 Z" fill="#1E4FFF"/>
+            <!-- валик воротника -->
+            <path d="M390 97 C414 99 434 108 452 120 C472 133 494 142 518 149 C540 156 560 166 576 178" stroke="#5BC6FF" stroke-width="9" stroke-linecap="round" fill="none"/>
+            <!-- пяточная накладка -->
+            <path d="M536 150 L720 150 L720 366 L556 366 C548 290 542 218 536 150 Z" fill="#1E4FFF"/>
+            <path d="M546 162 C552 230 558 298 564 360" stroke="#FFFFFF" stroke-opacity=".6" stroke-width="2.5" stroke-dasharray="7 6"/>
+          </g>
+          <!-- шнуровка по дуге -->
+          <g stroke="#D8DEE9" stroke-width="13" stroke-linecap="round">
+            <path d="M306 238 L334 256"/><path d="M322 216 L352 232"/><path d="M334 194 L366 208"/><path d="M344 172 L376 184"/><path d="M352 150 L384 160"/><path d="M358 128 L390 136"/><path d="M366 108 L396 114"/>
+          </g>
+          <g stroke="#FFFFFF" stroke-width="9" stroke-linecap="round">
+            <path d="M306 238 L334 256"/><path d="M322 216 L352 232"/><path d="M334 194 L366 208"/><path d="M344 172 L376 184"/><path d="M352 150 L384 160"/><path d="M358 128 L390 136"/><path d="M366 108 L396 114"/>
+          </g>
+          <g fill="#8B90A0">
+            <circle cx="334" cy="256" r="3"/><circle cx="352" cy="232" r="3"/><circle cx="366" cy="208" r="3"/><circle cx="376" cy="184" r="3"/><circle cx="384" cy="160" r="3"/><circle cx="390" cy="136" r="3"/><circle cx="396" cy="114" r="3"/>
+          </g>
+          <!-- контур -->
+          <path d="M70 356 C68 330 78 308 102 298 C128 288 154 284 180 278 C224 268 264 252 300 232 C322 220 338 204 348 184 C356 166 360 146 364 124 C368 104 380 92 398 92 C418 92 436 98 452 110 C470 122 488 130 508 136 C540 148 568 166 588 192 C606 218 614 280 614 356" stroke="#0B0B10" stroke-opacity=".1" stroke-width="3" fill="none"/>
+          </svg>
+            </div>
+            <div class="hero-slide pos-right">
+              <svg class="float" viewBox="0 0 720 460" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Футболка ArhoShop">
+            <ellipse cx="360" cy="432" rx="230" ry="11" fill="#5BC6FF" opacity=".14"/>
+          <!-- рукава -->
+          <path d="M276 114 L150 178 L196 254 L288 208 Z" fill="#1E4FFF"/>
+          <path d="M444 114 L570 178 L524 254 L432 208 Z" fill="#1E4FFF"/>
+          <path d="M160 184 L200 246 M560 184 L520 246" stroke="#5BC6FF" stroke-width="3" stroke-dasharray="6 5"/>
+          <!-- корпус -->
+          <path d="M250 122 L290 108 C312 130 408 130 430 108 L470 122 L470 408 C400 420 320 420 250 408 Z" fill="#FFFFFF"/>
+          <!-- горловина -->
+          <path d="M290 108 C312 130 408 130 430 108 L416 96 C400 112 320 112 304 96 Z" fill="#1E4FFF"/>
+          <!-- складки -->
+          <path d="M266 180 L266 392 M454 180 L454 392" stroke="#E8EAEE" stroke-width="4" stroke-linecap="round"/>
+          <!-- подгиб -->
+          <path d="M250 396 C320 408 400 408 470 396" stroke="#D8DEE9" stroke-width="3" stroke-dasharray="7 6" fill="none"/>
+          <!-- контур -->
+          <path d="M250 122 L290 108 M430 108 L470 122 M250 122 L250 408 M470 122 L470 408" stroke="#0B0B10" stroke-opacity=".08" stroke-width="3"/>
+          </svg>
+            </div>
+            <div class="hero-slide pos-left">
+              <svg class="float" viewBox="0 0 720 460" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Очки ArhoShop">
+            <ellipse cx="360" cy="356" rx="250" ry="11" fill="#5BC6FF" opacity=".14"/>
+          <!-- дужки -->
+          <path d="M112 196 L70 170 C62 165 64 154 74 152 L130 144" stroke="#0B0B10" stroke-width="13" stroke-linecap="round" fill="none"/>
+          <path d="M608 196 L650 170 C658 165 656 154 646 152 L590 144" stroke="#0B0B10" stroke-width="13" stroke-linecap="round" fill="none"/>
+          <!-- оправа: левая линза -->
+          <path d="M118 152 C118 134 134 122 154 122 L296 122 C320 122 336 138 334 162 L326 246 C322 282 296 306 258 306 L196 306 C158 306 132 282 128 246 Z" fill="#1E4FFF"/>
+          <path d="M138 158 C138 146 148 138 162 138 L290 138 C306 138 316 150 314 166 L308 240 C305 268 286 286 256 286 L200 286 C170 286 148 268 146 240 Z" fill="#5BC6FF"/>
+          <!-- оправа: правая линза -->
+          <path d="M602 152 C602 134 586 122 566 122 L424 122 C400 122 384 138 386 162 L394 246 C398 282 424 306 462 306 L524 306 C562 306 588 282 592 246 Z" fill="#1E4FFF"/>
+          <path d="M582 158 C582 146 572 138 558 138 L430 138 C414 138 404 150 406 166 L412 240 C415 268 434 286 464 286 L520 286 C550 286 572 268 574 240 Z" fill="#5BC6FF"/>
+          <!-- переносица -->
+          <path d="M334 158 C348 148 372 148 386 158" stroke="#1E4FFF" stroke-width="14" stroke-linecap="round" fill="none"/>
+          <!-- блики -->
+          <path d="M168 162 L218 162 L172 252 L156 230 Z" fill="#FFFFFF" opacity=".55"/>
+          <path d="M238 162 L260 162 L210 262 L194 252 Z" fill="#FFFFFF" opacity=".35"/>
+          <path d="M436 162 L486 162 L440 252 L424 230 Z" fill="#FFFFFF" opacity=".55"/>
+          <path d="M506 162 L528 162 L478 262 L462 252 Z" fill="#FFFFFF" opacity=".35"/>
+          </svg>
+            </div>
+          </div>
+      </div>
+    </div>
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <span>ARHOSHOP</span><span class="dot">●</span><span>НОВЫЙ ДРОП</span><span class="dot">●</span><span>ТОЛЬКО ОРИГИНАЛ</span><span class="dot">●</span><span>ДОСТАВКА ПО ВСЕЙ СТРАНЕ</span><span class="dot">●</span><span>ARHOSHOP</span><span class="dot">●</span><span>НОВЫЙ ДРОП</span><span class="dot">●</span><span>ТОЛЬКО ОРИГИНАЛ</span><span class="dot">●</span><span>ДОСТАВКА ПО ВСЕЙ СТРАНЕ</span><span class="dot">●</span>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <div class="container">
+      <div class="section-head reveal">
+        <div>
+          <span class="tag">Каталог</span>
+          <h2>Что ищешь сегодня?</h2>
+        </div>
+        <button class="link-arrow" onclick="goCatalog(event)">Весь каталог →</button>
+      </div>
+      <div class="cats">
+        <button class="cat cat-1 reveal" onclick="goCatalog(event,'Кроссовки')">
+          <span class="num" id="cntShoes"></span>
+          <h3>Кроссовки</h3>
+          <p>От ранеров до лимиток — пара под любой стиль</p>
+        </button>
+        <button class="cat cat-2 reveal" onclick="goCatalog(event,'Одежда')">
+          <span class="num" id="cntClothes"></span>
+          <h3>Одежда</h3>
+          <p>Худи, футболки, штаны и куртки на каждый день</p>
+        </button>
+        <button class="cat cat-3 reveal" onclick="goCatalog(event,'Аксессуары')">
+          <span class="num" id="cntAcc"></span>
+          <h3>Аксессуары</h3>
+          <p>Сумки, кепки, обувь не на каждый день — детали решают</p>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section style="background:var(--grey)">
+    <div class="container">
+      <div class="section-head reveal">
+        <div>
+          <span class="tag">Топ по просмотрам</span>
+          <h2>Популярное сейчас</h2>
+        </div>
+        <div class="feat-nav">
+          <button class="link-arrow" onclick="goCatalog(event)">Все товары →</button>
+        </div>
+      </div>
+      <div class="feat-stage" id="featStage"></div>
+      <div class="feat-controls">
+        <button class="feat-arrow" id="featPrev" aria-label="Назад">‹</button>
+        <button class="feat-arrow" id="featNext" aria-label="Вперёд">›</button>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="section-head reveal">
+        <div>
+          <span class="tag">Почему ArhoShop</span>
+          <h2>Покупать у нас — просто</h2>
+        </div>
+      </div>
+      <div class="perks">
+        <div class="perk reveal">
+          <div class="perk-icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1E4FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><path d="M12 2l7 4v6c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6z"/></svg>
+          </div>
+          <h3>100% оригинал</h3>
+          <p>Все товары проходят проверку подлинности перед отправкой.</p>
+        </div>
+        <div class="perk reveal">
+          <div class="perk-icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1E4FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="14" height="11" rx="2"/><path d="M15 10h4l3 3v4h-7z"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg>
+          </div>
+          <h3>Доставка по всей стране</h3>
+          <p>Привезём заказ курьером, в пункт выдачи или почтой — как удобно.</p>
+        </div>
+        <div class="perk reveal">
+          <div class="perk-icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1E4FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+          </div>
+          <h3>Честные цены</h3>
+          <p>Цена зависит от размера и показывается до оформления — без сюрпризов.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ КАТАЛОГ ============ -->
+<main id="pageCatalog" class="hidden">
+  <section style="padding-top:48px">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="tag">ArhoShop</span>
+          <h2>Каталог</h2>
+        </div>
+        <span class="result-count" id="resultCount"></span>
+      </div>
+
+      <button class="filters-toggle" onclick="document.getElementById('filtersPanel').classList.toggle('open')">⚙ Фильтры</button>
+
+      <div class="catalog-layout">
+        <aside class="filters" id="filtersPanel">
+          <div class="f-group">
+            <div class="f-title">Категория</div>
+            <div id="fCats"></div>
+          </div>
+          <div class="f-group">
+            <div class="f-title">Бренд</div>
+            <input class="brand-search" id="brandSearch" placeholder="Найти бренд…" oninput="renderBrandList()">
+            <div class="brand-list" id="fBrands"></div>
+          </div>
+          <div class="f-group">
+            <div class="f-title">Размер</div>
+            <div class="size-sub">Обувь (EU)</div>
+            <div class="sizes-wrap" id="fSizesShoes"></div>
+            <div class="size-sub">Одежда</div>
+            <div class="sizes-wrap" id="fSizesClothes"></div>
+          </div>
+          <div class="f-group">
+            <div class="f-title">Цена, ₽</div>
+            <div class="price-inputs">
+              <input type="number" id="priceMin" placeholder="от" min="0" oninput="debouncedApply()">
+              <span>—</span>
+              <input type="number" id="priceMax" placeholder="до" min="0" oninput="debouncedApply()">
+            </div>
+          </div>
+          <button class="reset-btn" onclick="resetFilters()">Сбросить фильтры</button>
+        </aside>
+
+        <div>
+          <div class="catalog-top">
+            <div class="search-box">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8B90A0" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              <input type="text" id="searchInput" placeholder="Поиск: модель, бренд…" oninput="debouncedApply()">
+            </div>
+            <select class="sort-select" id="sortSelect" onchange="applyFilters()">
+              <option value="default">По умолчанию</option>
+              <option value="priceAsc">Сначала дешевле</option>
+              <option value="priceDesc">Сначала дороже</option>
+              <option value="nameAsc">По названию А–Я</option>
+            </select>
+          </div>
+          <div class="active-chips" id="activeChips"></div>
+          <div class="catalog-grid" id="catalogGrid"></div>
+          <div class="empty-state hidden" id="emptyState">
+            <h3>Ничего не нашлось</h3>
+            <p>Попробуй изменить фильтры или сбросить их.</p>
+            <button class="btn-primary" style="margin-top:20px" onclick="resetFilters()">Сбросить фильтры</button>
+          </div>
+          <button class="load-more hidden" id="loadMore" onclick="loadMore()">Показать ещё</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ============ ДОСТАВКА И ОПЛАТА ============ -->
+<main id="pageShipping" class="hidden">
+  <section style="padding-top:48px">
+    <div class="container info-page">
+      <span class="tag">Покупателям</span>
+      <h2>Доставка и оплата</h2>
+
+      <div class="info-card highlight">
+        <h3>Оплата — только полная предоплата</h3>
+        <p>Мы работаем исключительно по полной предоплате. После оформления заказа менеджер связывается с вами, подтверждает наличие и размер и присылает реквизиты для оплаты. Заказ уходит в работу только после поступления полной суммы.</p>
+      </div>
+
+      <div class="info-card">
+        <h3>Как оформить заказ</h3>
+        <p>Выберите товар и размер, добавьте в корзину и оформите заказ — оставьте имя, телефон и город. Менеджер свяжется с вами в Telegram или по телефону для подтверждения и оплаты.</p>
+      </div>
+
+      <div class="info-card">
+        <h3>Сроки и способы доставки</h3>
+        <p>Доставляем по всей России. Доступны курьерская доставка до двери, доставка в пункт выдачи и почтой — способ выбирается при оформлении. Точный срок зависит от наличия товара на складе и вашего региона; менеджер сообщит его при подтверждении заказа.</p>
+      </div>
+
+      <div class="info-card">
+        <h3>Стоимость доставки</h3>
+        <p>Стоимость доставки рассчитывается индивидуально в зависимости от региона и выбранного способа. Менеджер озвучит её до оплаты — никаких скрытых платежей.</p>
+      </div>
+
+      <button class="btn-primary" onclick="goCatalog(event)">Перейти в каталог</button>
+    </div>
+  </section>
+</main>
+
+<!-- ============ ВОЗВРАТ ============ -->
+<main id="pageReturns" class="hidden">
+  <section style="padding-top:48px">
+    <div class="container info-page">
+      <span class="tag">Покупателям</span>
+      <h2>Возврат</h2>
+
+      <div class="info-card">
+        <h3>Условия возврата</h3>
+        <p>Вернуть товар надлежащего качества можно в течение 14 дней с момента получения, если он не был в использовании, сохранены товарный вид, бирки, оригинальная упаковка и комплектность.</p>
+      </div>
+
+      <div class="info-card">
+        <h3>Как оформить возврат</h3>
+        <p>Напишите нашему менеджеру в Telegram <a href="https://t.me/arhoshopmngr" target="_blank" rel="noopener" class="inline-link">@arhoshopmngr</a> или позвоните по телефону <a href="tel:+79957967297" class="inline-link">+7 995 796-72-97</a>. Сообщите номер заказа и причину возврата — менеджер подскажет дальнейшие шаги и адрес для отправки.</p>
+      </div>
+
+      <div class="info-card">
+        <h3>Возврат товара ненадлежащего качества</h3>
+        <p>Если товар пришёл с браком или не соответствует заказу, мы вернём полную стоимость, включая доставку, либо заменим товар. Приложите фото при обращении — так вопрос решится быстрее.</p>
+      </div>
+
+      <div class="info-card">
+        <h3>Сроки возврата средств</h3>
+        <p>Деньги возвращаются тем же способом, которым была произведена оплата, после получения и проверки возвращённого товара. Срок зачисления зависит от вашего банка.</p>
+      </div>
+
+      <button class="btn-primary" onclick="goCatalog(event)">Перейти в каталог</button>
+    </div>
+  </section>
+</main>
+
+<!-- ============ ЛИЧНЫЙ КАБИНЕТ ============ -->
+<main id="pageAccount" class="hidden">
+  <section style="padding-top:48px">
+    <div class="container" id="accountBody"></div>
+  </section>
+</main>
+
+<!-- ===== ФУТЕР ===== -->
+<footer id="contacts">
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-about">
+        <a href="#" class="logo" onclick="goHome(event)" aria-label="ArhoShop">
+          <svg width="40" height="40" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="64" height="64" rx="16" fill="#1E4FFF"/>
+            <path d="M14 50 L29 14 L35 14 L24.5 50 Z" fill="#FFFFFF"/>
+            <path d="M31 14 L37 14 L52 50 L42 50 Z" fill="#0B0B10"/>
+            <path d="M24 36 H44 L46 41 H22 Z" fill="#5BC6FF"/>
+            <path d="M12 55 H30 L28.5 59 H10.5 Z" fill="#FFFFFF" opacity=".9"/>
+            <path d="M36 55 H54 L52.5 59 H34.5 Z" fill="#5BC6FF" opacity=".9"/>
+          </svg>
+          <span class="logo-name" style="color:#fff">Arho<span style="color:#5BC6FF">Shop</span></span>
+        </a>
+        <p>Кроссовки и уличная одежда. Только оригинал, честные цены, быстрая доставка.</p>
+      </div>
+      <div>
+        <h4>Каталог</h4>
+        <a onclick="goCatalog(event,'Кроссовки')">Кроссовки</a>
+        <a onclick="goCatalog(event,'Одежда')">Одежда</a>
+        <a onclick="goCatalog(event,'Аксессуары')">Аксессуары</a>
+      </div>
+      <div>
+        <h4>Покупателям</h4>
+        <a onclick="goPage(event,'pageShipping')">Доставка и оплата</a>
+        <a onclick="goPage(event,'pageReturns')">Возврат</a>
+      </div>
+      <div>
+        <h4>Контакты</h4>
+        <a href="tel:+79957967297">+7 995 796-72-97</a>
+        <a href="https://t.me/arhoshopmngr" target="_blank" rel="noopener">Telegram: @arhoshopmngr</a>
+        <a href="https://vk.ru/deadsec_33" target="_blank" rel="noopener">VK — DeadSec</a>
+        <a href="https://vk.ru/arhotrip" target="_blank" rel="noopener">VK — ArhoTrip</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 ArhoShop. Все права защищены.</span>
+      <span>Сделано с любовью к кроссовкам 👟</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ===== МОДАЛКА ТОВАРА ===== -->
+<div class="overlay" id="productOverlay" onclick="if(event.target===this)closeProduct()">
+  <div class="modal-wrap">
+    <button class="modal-close" onclick="closeProduct()" aria-label="Закрыть">✕</button>
+    <div class="modal" id="productModal"></div>
+  </div>
+</div>
+
+<!-- ===== КОРЗИНА ===== -->
+<div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+<aside class="cart-drawer" id="cartDrawer" aria-label="Корзина">
+  <div class="cart-head">
+    <h3>Корзина</h3>
+    <button class="modal-close" style="position:static" onclick="closeCart()" aria-label="Закрыть корзину">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-foot" id="cartFoot">
+    <div class="cart-total">
+      <span>Итого</span>
+      <b id="cartTotal">0 ₽</b>
+    </div>
+    <button class="checkout-btn" id="checkoutBtn" onclick="startCheckout()">Оформить заказ</button>
+  </div>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<script src="api.js"></script>
+<script>
+/* ================== ПОДГОТОВКА ДАННЫХ ================== */
+const IMG_BASE = 'https://static.poizon.ru/';
+const LETTER_ORDER = ['XXXS','XXS','XS','S','M','L','XL','XXL','2XL','XXXL','3XL','XXXXL','4XL','5XL','6XL'];
+function sizeSortKey(sz){
+  const v = sizeToNum(sz);
+  if(!isNaN(v)) return v;                       // числовые: 38, 42.5, 40⅔
+  const up = String(sz).toUpperCase().trim();
+  const li = LETTER_ORDER.indexOf(up);
+  if(li >= 0) return 1000 + li;                 // буквенные: XS..XL
+  if(['F','ONE SIZE','OS','FREE'].includes(up)) return 3000; // безразмерные — в конец
+  return 2000;                                  // прочие — между ними
+}
+function sortSizes(sizes){
+  return [...sizes].sort((a,b)=>sizeSortKey(a[0]) - sizeSortKey(b[0]));
+}
+// Каталог подгружается лениво чанками (api.js → ArhoCatalog.load), затем prepareData().
+let CHARTS = [];
+let PRODUCTS = [];
+
+const fmt = n => n.toLocaleString('ru-RU') + ' ₽';
+const PAGE_SIZE = 24;
+const SHOE_CHIPS = ['35','36','37','38','39','40','41','42','43','44','45','46','47'];
+const CLOTH_CHIPS = ['XS','S','M','L','XL','XXL+','One size'];
+
+// нормализация размера для сравнения
+function sizeToNum(s){
+  return parseFloat(String(s).replace('⅓','.33').replace('⅔','.67').replace('½','.5').replace(',','.'));
+}
+function matchSizeChip(chip, productSizes){
+  const names = productSizes.map(s=>s[0]);
+  if(/^\d+$/.test(chip)){ // обувной
+    const n = parseInt(chip);
+    return names.some(s=>{ const v = sizeToNum(s); return !isNaN(v) && Math.floor(v)===n; });
+  }
+  const up = names.map(s=>String(s).toUpperCase());
+  if(chip==='XXL+') return up.some(s=>['XXL','2XL','3XL','4XL','XXXL','XXXXL'].includes(s));
+  if(chip==='One size') return up.some(s=>['F','ONE SIZE','OS','FREE'].includes(s));
+  return up.includes(chip);
+}
+
+/* ================== НАВИГАЦИЯ ================== */
+const ALL_PAGES = ['pageHome','pageCatalog','pageShipping','pageReturns','pageAccount'];
+function showOnly(id){
+  ALL_PAGES.forEach(pid=>{
+    const el = document.getElementById(pid);
+    if(el) el.classList.toggle('hidden', pid!==id);
+  });
+}
+const pageHome = document.getElementById('pageHome');
+const pageCatalog = document.getElementById('pageCatalog');
+
+function withWipe(fn){
+  const c = document.getElementById('pageCurtain');
+  if(!c || window.matchMedia('(prefers-reduced-motion: reduce)').matches){ fn(); return; }
+  c.classList.remove('wipe'); void c.offsetWidth; c.classList.add('wipe');
+  setTimeout(fn, 400);
+}
+function goPage(e, id){
+  if(e) e.preventDefault();
+  withWipe(()=>{
+    showOnly(id);
+    setActive(id==='pageCatalog' ? 'navCatalog' : (id==='pageHome' ? 'navHome' : ''));
+    closeMobileNav();
+    window.scrollTo({top:0});
+  });
+}
+function goHome(e){
+  if(e) e.preventDefault();
+  withWipe(()=>{
+    showOnly('pageHome');
+    setActive('navHome'); closeMobileNav();
+    renderFeatured();
+    window.scrollTo({top:0});
+  });
+}
+function goCatalog(e, cat=null){
+  if(e) e.preventDefault();
+  withWipe(()=>{
+    showOnly('pageCatalog');
+    setActive('navCatalog'); closeMobileNav();
+    resetFilters(true);
+    if(cat){
+      const cb = document.querySelector(`#fCats input[value="cat:${cat}"]`);
+      if(cb) cb.checked = true;
+    }
+    applyFilters();
+    window.scrollTo({top:0});
+  });
+}
+function setActive(id){
+  document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('active'));
+  const el = document.getElementById(id);
+  if(el) el.classList.add('active');
+}
+function closeMobileNav(){ document.getElementById('navLinks').classList.remove('open'); }
+document.getElementById('burger').addEventListener('click',()=>document.getElementById('navLinks').classList.toggle('open'));
+
+/* ================== ФИЛЬТРЫ ================== */
+// Паттерны моделей для определения модели кроссовка по названию.
+// Это фактические обозначения моделей (Air Force 1, Samba и т.д.) — справочные, не творческий контент.
+const MODEL_PATTERNS = {
+  'Nike': [['Air Force 1',/air\s*force\s*1|\baf-?1\b/i],['Air Max',/air\s*max/i],['Dunk',/\bdunk/i],
+    ['Blazer',/blazer/i],['Cortez',/cortez/i],['Pegasus',/pegasus/i],['Vomero',/vomero/i],
+    ['Air Zoom',/zoom/i],['Vapormax',/vapor\s*max/i],['React',/react/i],['Shox',/shox/i],['P-6000',/p-?6000/i]],
+  'Jordan': [['Air Jordan 1',/jordan\s*1\b|\baj-?1\b/i],['Air Jordan 2',/jordan\s*2\b/i],
+    ['Air Jordan 3',/jordan\s*3\b/i],['Air Jordan 4',/jordan\s*4\b/i],['Air Jordan 5',/jordan\s*5\b/i],
+    ['Air Jordan 6',/jordan\s*6\b/i],['Air Jordan 11',/jordan\s*11\b/i],['Air Jordan 12',/jordan\s*12\b/i],
+    ['Air Jordan 13',/jordan\s*13\b/i]],
+  'adidas': [['Samba',/samba/i],['Gazelle',/gazelle/i],['Superstar',/superstar/i],['Campus',/campus/i],
+    ['Forum',/forum/i],['Stan Smith',/stan\s*smith/i],['Ultraboost',/ultra\s*boost/i],['NMD',/\bnmd/i],
+    ['Yeezy',/yeezy/i],['Spezial',/spezial/i],['Handball',/handball/i],['SL 72',/\bsl\s*72/i],['Country',/country/i]],
+  'adidas originals': [['Samba',/samba/i],['Gazelle',/gazelle/i],['Superstar',/superstar/i],['Campus',/campus/i],
+    ['Forum',/forum/i],['Stan Smith',/stan\s*smith/i],['Spezial',/spezial/i],['Handball',/handball/i],['SL 72',/\bsl\s*72/i]],
+  'PUMA': [['Suede',/suede/i],['Palermo',/palermo/i],['Speedcat',/speedcat/i],['RS-X',/rs-?x/i],
+    ['Cali',/\bcali/i],['Mayze',/mayze/i],['Clyde',/clyde/i],['Easy Rider',/easy\s*rider/i]],
+  'New Balance': [['550',/\b550\b/],['574',/\b574\b/],['990',/\b990\b/],['2002R',/2002r/i],
+    ['327',/\b327\b/],['1906',/1906/],['9060',/9060/],['530',/\b530\b/],['480',/\b480\b/],['1000',/\b1000\b/]],
+  'Asics': [['Gel-Kayano',/kayano/i],['Gel-1130',/1130/],['Gel-Nimbus',/nimbus/i],['GT-2160',/gt-?2160/i],
+    ['Gel-Lyte',/gel-?lyte/i],['Gel-Quantum',/quantum/i]],
+  'Vans': [['Old Skool',/old\s*skool/i],['Sk8-Hi',/sk8-?hi/i],['Authentic',/authentic/i],['Era',/\bera\b/i],['Knu Skool',/knu\s*skool/i]],
+  'Converse': [['Chuck 70',/chuck\s*70/i],['Chuck Taylor / All Star',/chuck\s*taylor|all\s*star/i],['One Star',/one\s*star/i],['Run Star',/run\s*star/i]],
+  'Salomon': [['XT-6',/xt-?6/i],['XT-4',/xt-?4/i],['Speedcross',/speedcross/i],['ACS Pro',/acs\s*pro/i]],
+};
+function detectModel(brand, name){
+  const pats = MODEL_PATTERNS[brand];
+  if(pats){ for(const [label, rx] of pats){ if(rx.test(name)) return label; } }
+  return null;
+}
+// нормализация категорий: исправляем ошибочно размеченные товары по названию
+function normalizeCats(){
+  const SHOE=/\b(sneakers?|skate\s?boarding shoes?|running shoes?|basketball shoes?|casual shoes?|lifestyle shoes?|training shoes?|board shoes?|dad shoes?|canvas shoes?|soccer shoes?|loafers?|sandals?|slippers?|flip[- ]?flops?|low[- ]?top|high[- ]?top|mid[- ]?top|кроссов|\bкед)\b/i;
+  const TAIL=/\bshoes?\b\s*$/i;
+  const CLOTH=/\b(t[- ]?shirts?|tee|hoodie|sweatshirts?|sweatpants?|trousers?|\bpants\b|jeans|shorts|jackets?|coats?|parka|sweaters?|cardigan|\bvest\b|\bpolo\b|leggings|skirt|\bdress\b|худи|футболк|штаны|джинс|шорты|куртк|пальто|свитер|толстов|поло)\b/i;
+  const BAGACC=/\b(handbags?|\bbags?\b|backpacks?|tote|crossbody|clutch|wallets?|purse|\bhats?\b|\bcaps?\b|beanie|\bbelts?\b|scarf|gloves?|\bsocks?\b|sunglasses|glasses|watch|necklace|bracelet|earrings?|сумк|рюкзак|кошел|кепк|шапк|ремень|шарф|очк|часы)\b/i;
+  PRODUCTS.forEach(p=>{
+    const name=p.name||'';
+    const isShoe=SHOE.test(name)||TAIL.test(name), isCloth=CLOTH.test(name), isBagAcc=BAGACC.test(name);
+    if(p.cat==='Одежда' && isShoe && !isCloth && !isBagAcc){ p.cat='Кроссовки'; p.sub=null; }
+    else if(p.cat==='Кроссовки' && isCloth && !isShoe){
+      p.cat='Одежда';
+      p.sub = /\b(shorts)\b|шорты/i.test(name) ? 'Шорты'
+            : /\b(trousers?|pants|jeans)\b|штаны|джинс/i.test(name) ? 'Штаны и джинсы'
+            : /\b(hoodie|sweatshirts?|sweatpants?)\b|худи|толстов/i.test(name) ? 'Толстовки и худи'
+            : /\b(jackets?|coats?|parka)\b|куртк|пальто/i.test(name) ? 'Верхняя одежда'
+            : /\b(t[- ]?shirts?|tee|polo)\b|футболк|поло/i.test(name) ? 'Футболки и поло'
+            : 'Другое';
+    }
+  });
+}
+const modelLabel = m => m==='__other__' ? 'Другие модели' : m;
+
+// Группировка суб-брендов под родительский: при выборе родителя показываются и дочерние.
+// Это справочные обозначения брендов из данных, нужны только для навигации по каталогу.
+const BRAND_GROUP = {
+  'Jordan':'Nike',
+  'Nike SB':'Nike',
+  'adidas originals':'adidas',
+  'adidas Originals':'adidas',
+  'Y-3':'adidas',
+};
+// Производные метаданные каталога — заполняются в prepareData() после ленивой загрузки.
+let catCounts = {}, subCounts = {}, brandCounts = {};
+let brandModels = {}, brandShoeCounts = {};
+let SUBS = [], ACC_SUBS = [], BRANDS_SORTED = [];
+let selectedBrands = new Set();
+let selectedSizes = new Set();
+let selectedModels = new Set();
+
+/* Сборка PRODUCTS и метаданных каталога из подгруженных PRODUCTS_DATA/SIZE_CHARTS. */
+function prepareData(){
+  CHARTS = (typeof SIZE_CHARTS !== 'undefined') ? SIZE_CHARTS : [];
+  PRODUCTS = (typeof PRODUCTS_DATA !== 'undefined' ? PRODUCTS_DATA : []).map((p,i)=>({
+    id:i, name:p.n, brand:p.b, cat:p.c, sub:p.sc||null, price:p.p,
+    imgs:(p.im||[]).map(u=>IMG_BASE+u), img:IMG_BASE+(p.im&&p.im[0]||''), sizes:sortSizes(p.s),
+    chart:(p.ch!==undefined && CHARTS[p.ch]) ? CHARTS[p.ch] : null
+  }));
+  normalizeCats();
+  PRODUCTS.forEach(p=>{ p.model = (p.cat==='Кроссовки') ? (detectModel(p.brand, p.name) || '__other__') : null; });
+  // нижнее бельё относим к одежде (показываем последним)
+  PRODUCTS.forEach(p=>{ if(p.sub==='Нижнее бельё') p.cat='Одежда'; });
+  PRODUCTS.forEach(p=>{ p.brandGroup = BRAND_GROUP[p.brand] || p.brand; });
+  catCounts = {}; subCounts = {}; brandCounts = {};
+  PRODUCTS.forEach(p=>{
+    catCounts[p.cat]=(catCounts[p.cat]||0)+1;
+    if(p.sub) subCounts[p.sub]=(subCounts[p.sub]||0)+1;
+    brandCounts[p.brandGroup]=(brandCounts[p.brandGroup]||0)+1;
+  });
+  brandModels = {}; brandShoeCounts = {};
+  PRODUCTS.forEach(p=>{
+    if(p.cat!=='Кроссовки') return;
+    brandShoeCounts[p.brandGroup] = (brandShoeCounts[p.brandGroup]||0)+1;
+    if(!p.model) return;
+    (brandModels[p.brandGroup] = brandModels[p.brandGroup] || {});
+    brandModels[p.brandGroup][p.model] = (brandModels[p.brandGroup][p.model]||0)+1;
+  });
+  SUBS = ['Верхняя одежда','Толстовки и худи','Футболки и поло','Штаны и джинсы','Шорты','Другое','Нижнее бельё'].filter(s=>subCounts[s]);
+  ACC_SUBS = [].filter(s=>subCounts[s]);
+  BRANDS_SORTED = Object.keys(brandCounts).sort((a,b)=>brandCounts[b]-brandCounts[a]);
+}
+
+function buildFilters(){
+  // категории + подкатегории
+  let html = '';
+  ['Кроссовки','Одежда','Аксессуары'].forEach(c=>{
+    if(!catCounts[c]) return;
+    html += `<label class="check"><input type="checkbox" value="cat:${c}" onchange="applyFilters()"> <span class="lbl">${c}</span><span class="cnt">${catCounts[c].toLocaleString('ru-RU')}</span></label>`;
+    const subs = c==='Одежда' ? SUBS : (c==='Аксессуары' ? ACC_SUBS : []);
+    if(subs.length){
+      html += '<div class="sub-checks">' + subs.map(s=>
+        `<label class="check"><input type="checkbox" value="sub:${s}" onchange="applyFilters()"> <span class="lbl">${s}</span><span class="cnt">${subCounts[s].toLocaleString('ru-RU')}</span></label>`
+      ).join('') + '</div>';
+    }
+  });
+  document.getElementById('fCats').innerHTML = html;
+
+  document.getElementById('fSizesShoes').innerHTML = SHOE_CHIPS.map(s=>
+    `<button class="size-chip" onclick="toggleSize('${s}',this)">${s}</button>`).join('');
+  document.getElementById('fSizesClothes').innerHTML = CLOTH_CHIPS.map(s=>
+    `<button class="size-chip" onclick="toggleSize('${s}',this)">${s}</button>`).join('');
+
+  renderBrandList();
+}
+
+function renderBrandList(){
+  const q = (document.getElementById('brandSearch').value||'').trim().toLowerCase();
+  let list = BRANDS_SORTED;
+  if(q) list = list.filter(b=>b.toLowerCase().includes(q));
+  const shown = q ? list.slice(0,50) : list.slice(0,15);
+  // выбранные бренды всегда сверху
+  const pinned = [...selectedBrands].filter(b=>!shown.includes(b));
+  const final = [...pinned, ...shown];
+  document.getElementById('fBrands').innerHTML = final.map(b=>{
+    const esc = b.replace(/'/g,"\\'");
+    let row = `<label class="check"><input type="checkbox" ${selectedBrands.has(b)?'checked':''} onchange="toggleBrand('${esc}')"> <span class="lbl">${b}</span><span class="cnt">${brandCounts[b].toLocaleString('ru-RU')}</span></label>`;
+    // если бренд выбран и у него есть распознанные модели — показываем список моделей
+    if(selectedBrands.has(b) && brandModels[b]){
+      const entries = Object.entries(brandModels[b]);
+      const real = entries.filter(([m])=>m!=='__other__').sort((x,y)=>y[1]-x[1]);
+      if(real.length){ // показываем только если есть узнаваемые модели
+        const list = [...real];
+        if(brandModels[b]['__other__']) list.push(['__other__', brandModels[b]['__other__']]);
+        const shoeTotal = brandShoeCounts[b]||0;
+        row += `<div class="model-note">Кроссовки ${b}: ${shoeTotal.toLocaleString('ru-RU')}</div>`;
+        row += '<div class="model-list">' + list.map(([m,c])=>{
+          const label = modelLabel(m);
+          const me = m.replace(/'/g,"\\'");
+          return `<label class="check"><input type="checkbox" ${selectedModels.has(m)?'checked':''} onchange="toggleModel('${me}')"> <span class="lbl">${label}</span><span class="cnt">${c.toLocaleString('ru-RU')}</span></label>`;
+        }).join('') + '</div>';
+      }
+    }
+    return row;
+  }).join('') + (!q && BRANDS_SORTED.length>15 ? `<div style="font-size:.78rem;color:#A3A8B8;padding-top:6px">Ещё ${BRANDS_SORTED.length-15} брендов — ищи по названию</div>` : '');
+}
+function toggleBrand(b){
+  if(selectedBrands.has(b)){
+    selectedBrands.delete(b);
+    // снимаем модели этого бренда
+    if(brandModels[b]) Object.keys(brandModels[b]).forEach(m=>selectedModels.delete(m));
+  } else selectedBrands.add(b);
+  renderBrandList(); applyFilters();
+}
+function toggleModel(m){
+  if(selectedModels.has(m)) selectedModels.delete(m); else selectedModels.add(m);
+  renderBrandList(); applyFilters();
+}
+function toggleSize(s, el){
+  if(selectedSizes.has(s)){ selectedSizes.delete(s); el.classList.remove('on'); }
+  else { selectedSizes.add(s); el.classList.add('on'); }
+  applyFilters();
+}
+function getCheckedVals(){
+  return [...document.querySelectorAll('#fCats input:checked')].map(i=>i.value);
+}
+function resetFilters(silent){
+  document.querySelectorAll('#fCats input').forEach(i=>i.checked=false);
+  document.getElementById('priceMin').value='';
+  document.getElementById('priceMax').value='';
+  document.getElementById('searchInput').value='';
+  document.getElementById('brandSearch').value='';
+  document.getElementById('sortSelect').value='default';
+  selectedBrands.clear(); selectedSizes.clear(); selectedModels.clear();
+  document.querySelectorAll('.size-chip').forEach(c=>c.classList.remove('on'));
+  renderBrandList();
+  if(!silent) applyFilters();
+}
+
+let debTimer;
+function debouncedApply(){ clearTimeout(debTimer); debTimer = setTimeout(applyFilters, 250); }
+
+let filtered = [];
+let shown = 0;
+
+function applyFilters(){
+  const vals = getCheckedVals();
+  const cats = vals.filter(v=>v.startsWith('cat:')).map(v=>v.slice(4));
+  const subs = vals.filter(v=>v.startsWith('sub:')).map(v=>v.slice(4));
+  const pMin = parseInt(document.getElementById('priceMin').value)||0;
+  const pMax = parseInt(document.getElementById('priceMax').value)||Infinity;
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const sort = document.getElementById('sortSelect').value;
+  const sizeArr = [...selectedSizes];
+
+  const PARENTS_WITH_SUBS = ['Одежда','Аксессуары'];
+  filtered = PRODUCTS.filter(p=>{
+    if(subs.length){
+      // выбраны подкатегории: товар проходит, если его подкатегория выбрана
+      // ИЛИ выбрана его основная категория, у которой нет подкатегорий (или она выбрана отдельно)
+      const subOk = p.sub && subs.includes(p.sub);
+      const catOk = cats.filter(c=>!PARENTS_WITH_SUBS.includes(c)).includes(p.cat);
+      if(!subOk && !catOk) return false;
+    } else if(cats.length && !cats.includes(p.cat)) return false;
+    if(selectedBrands.size && !selectedBrands.has(p.brandGroup)) return false;
+    if(selectedModels.size && !selectedModels.has(p.model)) return false;
+    if(p.price < pMin || p.price > pMax) return false;
+    if(sizeArr.length && !sizeArr.some(s=>matchSizeChip(s, p.sizes))) return false;
+    if(q && !(p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q))) return false;
+    return true;
+  });
+
+  if(sort==='priceAsc') filtered.sort((a,b)=>a.price-b.price);
+  else if(sort==='priceDesc') filtered.sort((a,b)=>b.price-a.price);
+  else if(sort==='nameAsc') filtered.sort((a,b)=>a.name.localeCompare(b.name,'ru'));
+  else filtered.sort((a,b)=>{
+    const ua=a.sub==='Нижнее бельё'?1:0, ub=b.sub==='Нижнее бельё'?1:0;
+    return ua-ub || a.id-b.id;   // нижнее бельё — в самом конце
+  });
+
+  shown = 0;
+  document.getElementById('catalogGrid').innerHTML = '';
+  renderChips(cats, subs, q);
+  loadMore();
+  document.getElementById('resultCount').textContent = filtered.length.toLocaleString('ru-RU') + ' ' + plural(filtered.length);
+  document.getElementById('emptyState').classList.toggle('hidden', filtered.length>0);
+}
+
+function renderChips(cats, subs, q){
+  const chips = [];
+  cats.forEach(c=>chips.push({t:c, fn:`uncheck('cat:${c}')`}));
+  subs.forEach(s=>chips.push({t:s, fn:`uncheck('sub:${s}')`}));
+  [...selectedBrands].forEach(b=>chips.push({t:b, fn:`toggleBrand('${b.replace(/'/g,"\\'")}')`}));
+  [...selectedModels].forEach(m=>chips.push({t:modelLabel(m), fn:`toggleModel('${m.replace(/'/g,"\\'")}')`}));
+  [...selectedSizes].forEach(s=>chips.push({t:'Размер '+s, fn:`unsize('${s}')`}));
+  if(q) chips.push({t:'«'+q+'»', fn:`clearSearch()`});
+  document.getElementById('activeChips').innerHTML = chips.map(c=>
+    `<button class="a-chip" onclick="${c.fn}">${c.t} ✕</button>`).join('');
+}
+function uncheck(val){
+  const cb = document.querySelector(`#fCats input[value="${val}"]`);
+  if(cb) cb.checked=false;
+  applyFilters();
+}
+function unsize(s){
+  selectedSizes.delete(s);
+  document.querySelectorAll('.size-chip').forEach(c=>{ if(c.textContent===s) c.classList.remove('on'); });
+  applyFilters();
+}
+function clearSearch(){ document.getElementById('searchInput').value=''; applyFilters(); }
+
+function plural(n){
+  const m10=n%10, m100=n%100;
+  if(m10===1 && m100!==11) return 'товар';
+  if(m10>=2 && m10<=4 && (m100<10||m100>=20)) return 'товара';
+  return 'товаров';
+}
+
+function cardHTML(p){
+  const catLine = p.sub ? `${p.brand} · ${p.sub}` : `${p.brand} · ${p.cat}`;
+  return `<article class="card">
+    <div class="card-img" onclick="openProduct(${p.id})">
+      <img src="${p.img}" alt="${p.name.replace(/"/g,'&quot;')}" loading="lazy" onerror="this.style.opacity=.15">
+    </div>
+    <div class="card-body">
+      <span class="card-cat">${catLine}</span>
+      <h3 class="card-title" onclick="openProduct(${p.id})">${p.name}</h3>
+      <div class="card-foot">
+        <span class="price"><span class="price-from">от</span>${fmt(p.price)}</span>
+        <button class="add-btn" onclick="openProduct(${p.id})" aria-label="Выбрать размер и добавить">+</button>
+      </div>
+    </div>
+  </article>`;
+}
+
+function loadMore(){
+  const next = filtered.slice(shown, shown+PAGE_SIZE);
+  document.getElementById('catalogGrid').insertAdjacentHTML('beforeend', next.map(cardHTML).join(''));
+  shown += next.length;
+  document.getElementById('loadMore').classList.toggle('hidden', shown >= filtered.length);
+  const lm = document.getElementById('loadMore');
+  if(shown < filtered.length) lm.textContent = `Показать ещё (${(filtered.length-shown).toLocaleString('ru-RU')})`;
+}
+
+/* главная: подборка — 3D-карусель как в шапке */
+let featPicks = [], featCur = 0, featTimer = null;
+
+function renderFeatured(){
+  // приоритет — товары с наибольшим числом просмотров (кликов)
+  const clicks = getClicks();
+  const clicked = PRODUCTS
+    .filter(p=>clicks[p.id]>0)
+    .sort((a,b)=> clicks[b.id]-clicks[a.id] || a.id-b.id)
+    .slice(0,12);
+  const picks = clicked.slice();
+  // добор курируемой подборкой (обувь+аксессуары), пока кликов мало
+  if(picks.length<12){
+    const pool = PRODUCTS.filter(p=>p.cat!=='Одежда' && p.sub!=='Нижнее бельё' && !picks.includes(p));
+    for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+    const capByCat={'Кроссовки':8,'Аксессуары':4}, usedByCat={};
+    for(const p of pool){
+      const cap=capByCat[p.cat]||0;
+      if((usedByCat[p.cat]||0)>=cap) continue;
+      usedByCat[p.cat]=(usedByCat[p.cat]||0)+1;
+      picks.push(p);
+      if(picks.length>=12) break;
+    }
+    if(picks.length<12){ for(const p of pool){ if(!picks.includes(p)){ picks.push(p); if(picks.length>=12) break; } } }
+  }
+  featPicks = picks;
+  featCur = 0;
+  const stage = document.getElementById('featStage');
+  if(!stage) return;
+  stage.innerHTML = picks.map(p=>cardHTML(p)).join('');
+  layoutFeat();
+  setupFeatNav();
+  startFeatAuto();
+}
+
+function layoutFeat(){
+  const cards = [...document.querySelectorAll('#featStage > .card')];
+  const n = cards.length;
+  if(!n) return;
+  cards.forEach((card,i)=>{
+    let off = i - featCur;
+    if(off > n/2) off -= n;            // ближайший путь по кругу
+    if(off < -n/2) off += n;
+    const abs = Math.abs(off);
+    if(abs > 2){
+      card.classList.remove('is-front');
+      card.style.opacity = '0';
+      card.style.pointerEvents = 'none';
+      card.style.transform = `translateX(${off>0?180:-180}%) scale(.4)`;
+      card.style.zIndex = '0';
+      return;
+    }
+    const scale = 1 - abs*0.16;
+    card.style.transform = `translateX(${off*62}%) scale(${scale})`;
+    card.style.opacity = abs===0 ? '1' : (abs===1 ? '.62' : '.32');
+    card.style.zIndex = String(100 - abs);
+    card.style.pointerEvents = abs===0 ? 'auto' : 'none';
+    card.style.filter = abs===0 ? 'none' : 'saturate(.85)';
+    card.classList.toggle('is-front', abs===0);
+  });
+}
+
+function featGo(dir){
+  const n = featPicks.length;
+  if(!n || featBusy) return;          // игнорируем клики пока идёт переход
+  featBusy = true;
+  clearTimeout(featBusyT);
+  featBusyT = setTimeout(()=>{ featBusy = false; }, 620);  // = длительность transition
+  featCur = (featCur + dir + n) % n;
+  layoutFeat();
+}
+function startFeatAuto(){
+  clearInterval(featTimer);
+  featTimer = setInterval(()=>featGo(1), 4000);
+}
+function setupFeatNav(){
+  const prev = document.getElementById('featPrev');
+  const next = document.getElementById('featNext');
+  if(!prev || !next) return;
+  prev.disabled = false; next.disabled = false;
+  prev.onclick = ()=>{ featGo(-1); startFeatAuto(); };
+  next.onclick = ()=>{ featGo(1); startFeatAuto(); };
+  const stage = document.getElementById('featStage');
+  if(stage) stage.onmouseenter = ()=>clearInterval(featTimer);
+  if(stage) stage.onmouseleave = startFeatAuto;
+}
+let featResizeT;
+let featBusy = false, featBusyT = null;
+window.addEventListener('resize', ()=>{ clearTimeout(featResizeT); featResizeT=setTimeout(layoutFeat,150); });
+
+/* 3D-наклон передней карточки «Популярное сейчас» (как в каталоге) */
+(function(){
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const stage = document.getElementById('featStage');
+  if(!stage) return;
+  function resetFront(){
+    const f = stage.querySelector('.card.is-front');
+    if(!f) return;
+    f.style.transition = 'transform .5s cubic-bezier(.4,0,.2,1)';
+    f.style.transformOrigin = 'center top';
+    f.style.transform = 'translateX(0%) scale(1)';
+    f.style.boxShadow = '';
+  }
+  stage.addEventListener('mousemove', e=>{
+    const f = stage.querySelector('.card.is-front');
+    if(!f) return;
+    const r = f.getBoundingClientRect();
+    const px = (e.clientX - r.left)/r.width, py = (e.clientY - r.top)/r.height;
+    if(px<0||px>1||py<0||py>1) return;
+    const rx = (py-.5)*-7, ry = (px-.5)*10;
+    f.style.transition = 'transform .12s ease';
+    f.style.transformOrigin = 'center top';
+    f.style.transform = `perspective(900px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) scale(1.03)`;
+    f.style.boxShadow = '0 28px 56px rgba(11,11,16,.18)';
+  });
+  stage.addEventListener('mouseleave', resetFront);
+})();
+
+/* счётчики на главной */
+function renderCounts(){
+  const approx = n => (Math.floor((n||0)/100)*100).toLocaleString('ru-RU') + '+';
+  document.getElementById('cntShoes').textContent = approx(catCounts['Кроссовки'])+' моделей';
+  document.getElementById('cntClothes').textContent = approx(catCounts['Одежда'])+' позиций';
+  document.getElementById('cntAcc').textContent = approx(catCounts['Аксессуары'])+' товаров';
+  const thousands = Math.floor(PRODUCTS.length/1000).toLocaleString('ru-RU');
+  document.getElementById('heroSub').textContent =
+    `ArhoShop — более ${thousands} 000 оригинальных кроссовок, вещей и аксессуаров: Nike, Adidas, New Balance и ещё сотни брендов. Доставка по всей стране.`;
+}
+
+/* ================== МОДАЛКА ТОВАРА ================== */
+let modalProduct = null;
+let modalSize = null;
+
+function trackClick(id){
+  // локальный счётчик (мгновенно) + глобальный на сервере (api.js)
+  ArhoPopular.track(id);
+}
+function getClicks(){
+  try{ return JSON.parse(localStorage.getItem('arho_clicks')||'{}'); }catch(e){ return {}; }
+}
+function openProduct(id){
+  modalProduct = PRODUCTS[id];
+  const p = modalProduct;
+  trackClick(id);
+  modalSize = p.sizes.length===1 ? p.sizes[0] : null;
+  const prices = p.sizes.map(s=>s[1]);
+  const samePrice = Math.min(...prices) === Math.max(...prices);
+  const chartHTML = (p.chart && p.chart.length) ? `
+      <button class="chart-toggle" onclick="toggleChart(this)">📏 Таблица размеров ▾</button>
+      <div class="size-chart hidden" id="sizeChart">${chartTable(p.chart)}</div>` : '';
+  const gallery = (p.imgs && p.imgs.length ? p.imgs : [p.img]);
+  const thumbsHTML = gallery.length > 1 ? `
+      <div class="modal-thumbs" id="modalThumbs">
+        ${gallery.map((src,i)=>`<button class="thumb ${i===0?'on':''}" onclick="setMainPhoto(${i},this)"><img src="${src}" alt="" loading="lazy" onerror="this.style.opacity=.15"></button>`).join('')}
+      </div>` : '';
+  document.getElementById('productModal').innerHTML = `
+    <div class="modal-gallery">
+      <div class="modal-img" id="modalImgBox" onmousemove="zoomMove(event)" onmouseleave="resetZoom()"><img id="modalMainImg" src="${gallery[0]}" alt="" onerror="this.style.opacity=.15"><button type="button" class="zoom-btn" id="zoomBtn" onclick="toggleZoom()" aria-pressed="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="7"></circle><path d="M21 21l-5.2-5.2M10.5 7.5v6M7.5 10.5h6"></path></svg>Увеличить</button></div>
+      ${thumbsHTML}
+    </div>
+    <div class="modal-info">
+      <span class="card-cat">${p.brand} · ${p.sub||p.cat}</span>
+      <h3>${p.name}</h3>
+      <div class="modal-price" id="modalPrice">${modalSize ? fmt(modalSize[1]) : 'от '+fmt(p.price)}</div>
+      <div>
+        <div class="size-label" style="margin-bottom:10px">Размеры в наличии${samePrice?'':' · цена зависит от размера'}</div>
+        <div class="modal-sizes">
+          ${p.sizes.map((s,si)=>`<button class="size-chip price-chip ${modalSize===s?'on':''}" onclick="pickSize(${si},this)"><span>${s[0]}</span>${samePrice?'':`<small>${s[1].toLocaleString('ru-RU')} ₽</small>`}</button>`).join('')}
+        </div>
+        <p class="size-hint" id="sizeHint" style="margin-top:8px">Сначала выбери размер</p>
+      </div>
+      ${chartHTML}
+      <button class="btn-primary" style="width:100%" onclick="addFromModal()">Добавить в корзину</button>
+    </div>`;
+  document.getElementById('productOverlay').classList.add('show');
+  zoomOn = false;
+  document.body.style.overflow='hidden'; document.body.classList.add('modal-open');
+}
+let zoomOn = false;
+function toggleZoom(){
+  const box = document.getElementById('modalImgBox');
+  const btn = document.getElementById('zoomBtn');
+  if(!box || !btn) return;
+  zoomOn = !zoomOn;
+  box.classList.toggle('zoom-on', zoomOn);
+  btn.classList.toggle('on', zoomOn);
+  btn.setAttribute('aria-pressed', zoomOn ? 'true' : 'false');
+  btn.lastChild.textContent = zoomOn ? 'Обычный вид' : 'Увеличить';
+  if(!zoomOn) resetZoom();
+}
+function zoomMove(e){
+  if(!zoomOn) return;
+  if(e.target.closest('.zoom-btn')) return;
+  const box = document.getElementById('modalImgBox');
+  const img = document.getElementById('modalMainImg');
+  if(!box || !img) return;
+  const r = box.getBoundingClientRect();
+  const x = ((e.clientX - r.left)/r.width*100).toFixed(1);
+  const y = ((e.clientY - r.top)/r.height*100).toFixed(1);
+  img.style.transformOrigin = `${x}% ${y}%`;
+  img.style.transform = 'scale(2.4)';
+}
+function resetZoom(){
+  const img = document.getElementById('modalMainImg');
+  if(img){ img.style.transform = 'scale(1)'; img.style.transformOrigin = 'center center'; }
+}
+function setMainPhoto(i, el){
+  const gallery = (modalProduct.imgs && modalProduct.imgs.length ? modalProduct.imgs : [modalProduct.img]);
+  document.getElementById('modalMainImg').src = gallery[i];
+  resetZoom();
+  document.querySelectorAll('#modalThumbs .thumb').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+}
+// порядок буквенных размеров для сортировки ячеек сетки
+const CHART_LETTERS = ['XXXS','XXS','XS','S','M','L','XL','XXL','XXXL','XXXXL'];
+function normLetter(s){
+  let u = String(s).toUpperCase().trim();
+  u = u.replace(/^2XL$/,'XXL').replace(/^3XL$/,'XXXL').replace(/^4XL$/,'XXXXL').replace(/^5XL$/,'XXXXXL');
+  return u;
+}
+// ключ сортировки одной ячейки сетки: число / US-формат M5/W6.5 / буквенный размер / диапазон
+function cellKey(s){
+  s = String(s).trim();
+  const num = sizeToNum(s);
+  if(!isNaN(num)) return num;
+  const li = CHART_LETTERS.indexOf(normLetter(s));
+  if(li >= 0) return 1000 + li;
+  const us = s.match(/[MW]\s*([\d.]+)/i);      // US-обувь: M5/W6.5
+  if(us) return parseFloat(us[1]);
+  const range = s.match(/(\d+(?:[.,]\d+)?)/);   // диапазоны вроде 36-40
+  if(range) return parseFloat(range[1].replace(',','.'));
+  return 9999;
+}
+function chartTable(chart){
+  // Каждая строка в данных перемешана независимо. Сортируем КАЖДУЮ строку
+  // по своему естественному порядку (числа по возрастанию, буквы XS→XXXL) —
+  // тогда колонки снова соответствуют друг другу. Затем схлопываем дубли-колонки.
+  let rows = chart.map(([k, vals])=>{
+    const v = vals.map(x=>String(x).trim());
+    const sorted = [...v].sort((a,b)=>cellKey(a)-cellKey(b));
+    return [k, sorted];
+  });
+  // дедуп одинаковых колонок (только если все строки одной длины)
+  const len = rows[0] ? rows[0][1].length : 0;
+  if(len && rows.every(r=>r[1].length===len)){
+    const keepCols = [];
+    for(let c=0;c<len;c++){
+      const sig = rows.map(r=>r[1][c]).join('|');
+      if(c===0 || sig !== keepCols[keepCols.length-1].sig) keepCols.push({c, sig});
+    }
+    rows = rows.map(([k, v])=>[k, keepCols.map(({c})=>v[c])]);
+  }
+  const html = rows.map(([k, v])=>
+    `<tr><th>${k}</th>${v.map(x=>`<td>${x||'—'}</td>`).join('')}</tr>`
+  ).join('');
+  return `<div class="chart-scroll"><table>${html}</table></div>`;
+}
+function toggleChart(btn){
+  const el = document.getElementById('sizeChart');
+  el.classList.toggle('hidden');
+  btn.textContent = el.classList.contains('hidden') ? '📏 Таблица размеров ▾' : '📏 Таблица размеров ▴';
+}
+function pickSize(si, el){
+  modalSize = modalProduct.sizes[si];
+  document.querySelectorAll('#productModal .size-chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('sizeHint').classList.remove('show');
+  document.getElementById('modalPrice').textContent = fmt(modalSize[1]);
+}
+function addFromModal(){
+  if(!modalSize){ document.getElementById('sizeHint').classList.add('show'); return; }
+  addToCart(modalProduct.id, modalSize[0], modalSize[1]);
+  closeProduct();
+}
+function closeProduct(){
+  document.getElementById('productOverlay').classList.remove('show');
+  document.body.style.overflow=''; document.body.classList.remove('modal-open');
+}
+
+/* ================== КОРЗИНА ================== */
+let cart = [];
+
+function addToCart(id, size, price){
+  const found = cart.find(i=>i.id===id && i.size===size);
+  if(found) found.qty++;
+  else cart.push({id, size, price, qty:1});
+  updateCartUI();
+  const p = PRODUCTS[id];
+  showToast(`<span class="dot">✓</span><span>${p.name.slice(0,46)}${p.name.length>46?'…':''} · ${size} — в корзине</span>`);
+}
+function changeQty(idx, delta){
+  cart[idx].qty += delta;
+  if(cart[idx].qty<=0) cart.splice(idx,1);
+  updateCartUI();
+}
+function removeItem(idx){ cart.splice(idx,1); updateCartUI(); }
+function cartTotal(){ return cart.reduce((s,i)=>s + i.price * i.qty, 0); }
+
+function updateCartUI(){
+  const count = cart.reduce((s,i)=>s+i.qty,0);
+  document.getElementById('cartCount').textContent = count;
+  const box = document.getElementById('cartItems');
+  const foot = document.getElementById('cartFoot');
+
+  if(!cart.length){
+    box.innerHTML = `<div class="cart-empty">
+      <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#8B90A0" stroke-width="1.5"><circle cx="9" cy="21" r="1.5"/><circle cx="19" cy="21" r="1.5"/><path d="M2 3h3l2.6 12.4a2 2 0 002 1.6h9.7a2 2 0 002-1.6L23 7H6"/></svg>
+      <h3 style="color:var(--ink);margin-bottom:8px">Пока пусто</h3>
+      <p>Загляни в каталог — там много интересного.</p>
+      <button class="btn-primary" style="margin-top:20px" onclick="closeCart();goCatalog(event)">В каталог</button>
+    </div>`;
+    foot.style.display='none';
+    return;
+  }
+  foot.style.display='block';
+  box.innerHTML = cart.map((i,idx)=>{
+    const p = PRODUCTS[i.id];
+    return `<div class="cart-item">
+      <div class="ci-img"><img src="${p.img}" alt="" loading="lazy" onerror="this.style.opacity=.15"></div>
+      <div>
+        <div class="ci-name">${p.name}</div>
+        <div class="ci-meta">Размер: ${i.size}${i.qty>1 ? ' · '+fmt(i.price)+'/шт' : ''}</div>
+        <div class="ci-price">${fmt(i.price * i.qty)}</div>
+      </div>
+      <div class="ci-right">
+        <div class="qty">
+          <button onclick="changeQty(${idx},-1)" aria-label="Меньше">−</button>
+          <span>${i.qty}</span>
+          <button onclick="changeQty(${idx},1)" aria-label="Больше">+</button>
+        </div>
+        <button class="ci-remove" onclick="removeItem(${idx})">Удалить</button>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('cartTotal').textContent = fmt(cartTotal());
+  document.getElementById('checkoutBtn').onclick = startCheckout;
+  document.getElementById('checkoutBtn').textContent = 'Оформить заказ';
+}
+function openCart(){
+  updateCartUI();
+  document.getElementById('cartOverlay').classList.add('show');
+  document.getElementById('cartDrawer').classList.add('show');
+  document.body.style.overflow='hidden'; document.body.classList.add('modal-open');
+}
+function closeCart(){
+  document.getElementById('cartOverlay').classList.remove('show');
+  document.getElementById('cartDrawer').classList.remove('show');
+  document.body.style.overflow=''; document.body.classList.remove('modal-open');
+}
+
+/* ================== ОФОРМЛЕНИЕ ================== */
+function startCheckout(){
+  if(!cart.length) return;
+  document.getElementById('cartItems').innerHTML = `
+    <div class="checkout-form" style="padding-top:18px">
+      <h3 style="font-size:1.05rem">Оформление заказа</h3>
+      <div><label>Имя</label><input id="coName" placeholder="Как к тебе обращаться"></div>
+      <div><label>Телефон</label><input id="coPhone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="18" placeholder="+7 ___ ___-__-__" oninput="formatPhone(this)"></div>
+      <div><label>Город</label><input id="coCity" placeholder="Например, Москва"></div>
+      <div><label>Способ доставки</label>
+        <select id="coDelivery">
+          <option>Курьером до двери</option>
+          <option>Пункт выдачи</option>
+          <option>Почта</option>
+        </select>
+      </div>
+      <button class="ci-remove" style="align-self:flex-start" onclick="updateCartUI()">← Назад к корзине</button>
+    </div>`;
+  // если пользователь авторизован — подставляем имя и телефон из профиля
+  const acc = loadAccount();
+  if(acc && sessionOn()){
+    if(acc.name) document.getElementById('coName').value = acc.name;
+    if(acc.phone){ const ph=document.getElementById('coPhone'); ph.value=acc.phone; formatPhone(ph); }
+  }
+  const btn = document.getElementById('checkoutBtn');
+  btn.textContent = 'Подтвердить заказ · ' + fmt(cartTotal());
+  btn.onclick = confirmOrder;
+}
+function formatPhone(el){
+  let d = (el.value.match(/\d/g)||[]).join('');
+  if(d && d[0]==='8') d = '7'+d.slice(1);     // 8XXX → 7XXX
+  if(d && d[0]==='9') d = '7'+d;              // 9XX → 7 9XX (опущенная 7)
+  d = d.slice(0,11);
+  let out = '';
+  if(d.length){
+    out = '+7';
+    if(d.length>1) out += ' ' + d.slice(1,4);
+    if(d.length>=5) out += ' ' + d.slice(4,7);
+    if(d.length>=8) out += '-' + d.slice(7,9);
+    if(d.length>=10) out += '-' + d.slice(9,11);
+  }
+  el.value = out;
+  if(d.length>=11) el.classList.remove('form-err');
+}
+async function confirmOrder(){
+  let ok = true;
+  ['coName','coPhone','coCity'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el.value.trim()){ el.classList.add('form-err'); ok=false; }
+    else el.classList.remove('form-err');
+  });
+  if(!ok){ showToast('<span>Заполни имя, телефон и город</span>'); return; }
+  // телефон: должно быть 11 цифр (российский формат)
+  const phoneEl = document.getElementById('coPhone');
+  const digits = (phoneEl.value.match(/\d/g)||[]).length;
+  if(digits < 11){ phoneEl.classList.add('form-err'); showToast('<span>Введи корректный номер телефона</span>'); return; }
+  phoneEl.classList.remove('form-err');
+  const btn = document.getElementById('checkoutBtn');
+  btn.disabled = true; const prevTxt = btn.textContent; btn.textContent = 'Оформляем…';
+  const items = cart.map(i=>({ productId:i.id, name:(PRODUCTS[i.id]&&PRODUCTS[i.id].name)||'', size:i.size, qty:i.qty, price:i.price }));
+  let r;
+  try{
+    r = await ArhoAuth.createOrder({
+      name: document.getElementById('coName').value.trim(),
+      phone: phoneEl.value.trim(),
+      city: document.getElementById('coCity').value.trim(),
+      delivery: document.getElementById('coDelivery').value,
+      items,
+    });
+  }catch(e){
+    btn.disabled = false; btn.textContent = prevTxt;
+    showToast('<span>'+((e&&e.message)||'Не удалось оформить заказ')+'</span>');
+    return;
+  }
+  const num = r.order.id;
+  const total = fmt(r.order.total);
+  const earned = r.order.earnedBonuses;
+  const payUrl = r.payment && r.payment.confirmationUrl;
+  cart = [];
+  document.getElementById('cartCount').textContent = 0;
+  document.getElementById('cartItems').innerHTML = `
+    <div class="order-success">
+      <div class="big">🎉</div>
+      <h3>Заказ оформлен!</h3>
+      <p>Сумма: <b>${total}</b>. Мы свяжемся с тобой для подтверждения.${payUrl?'':' Это демо-заказ — оплата не списывается.'}</p>
+      <span class="order-num">Заказ № ${num}</span>
+      ${earned>0?`<p style="margin-top:16px">Начислено <b style="color:var(--blue)">${earned} бонусов</b> в программе лояльности.<br><button class="inline-link" style="background:none;border:none;font-size:.95rem;margin-top:8px" onclick="closeCart();goAccount()">Открыть личный кабинет →</button></p>`:`<p style="margin-top:16px;color:#5B6070">Войдите в аккаунт, чтобы копить бонусы с покупок.</p>`}
+      ${payUrl?`<p style="margin-top:16px"><a class="btn-primary" href="${payUrl}" style="display:inline-block;text-decoration:none">Перейти к оплате →</a></p>`:''}
+    </div>`;
+  document.getElementById('cartFoot').style.display='none';
+}
+
+/* ================== ЛИЧНЫЙ КАБИНЕТ + ЛОЯЛЬНОСТЬ ================== */
+let accMode = 'login';
+// Сессия и аккаунт берутся из бэкенда (api.js → ArhoAuth)
+function sessionOn(){ return ArhoAuth.isLoggedIn(); }
+function setAccMode(m){ accMode=m; renderAccount(); }
+const TIERS = [
+  {key:'bronze', name:'Бронза',  icon:'🥉', min:50000,  rate:0.01},
+  {key:'silver', name:'Серебро', icon:'🥈', min:100000, rate:0.02},
+  {key:'gold',   name:'Золото',  icon:'🥇', min:250000, rate:0.035},
+  {key:'plat',   name:'Платина', icon:'💎', min:500000, rate:0.05},
+];
+function tierFor(spent){
+  let i=-1; for(let k=0;k<TIERS.length;k++){ if(spent>=TIERS[k].min) i=k; }
+  if(i<0) return {none:true, key:'none', name:'Без уровня', icon:'⚪', min:0, rate:0, idx:-1, next:TIERS[0]};
+  return Object.assign({}, TIERS[i], {idx:i, next:TIERS[i+1]||null});
+}
+function loadAccount(){ return ArhoAuth.account(); }
+function refreshAccBtn(){
+  const a = loadAccount();
+  const lbl = document.getElementById('accBtnLabel');
+  if(lbl) lbl.textContent = (a && sessionOn() && a.name) ? (a.name.split(' ')[0]) : 'Кабинет';
+}
+function goAccount(e){
+  if(e) e.preventDefault();
+  withWipe(()=>{
+    showOnly('pageAccount');
+    setActive('navAccount'); closeMobileNav();
+    renderAccount();
+    window.scrollTo({top:0});
+  });
+}
+function fmtDate(ts){ return new Date(ts).toLocaleDateString('ru-RU',{day:'2-digit',month:'short',year:'numeric'}); }
+function renderAccount(){
+  const body = document.getElementById('accountBody');
+  if(!body) return;
+  const a = loadAccount();
+  if(!(a && sessionOn())){ body.innerHTML = authHTML(a); return; }
+  const t = tierFor(a.spent||0);
+  const next = t.next;
+  const prog = next ? Math.min(100, Math.max(4, Math.round(((a.spent||0) - t.min)/(next.min - t.min)*100))) : 100;
+  const toNext = next ? next.min - (a.spent||0) : 0;
+  const tiersHTML = TIERS.map(x=>`
+    <div class="tier-pill ${x.key===t.key?'on':''}">
+      <span class="ti">${x.icon}</span>
+      <b>${x.name}</b>
+      <span style="color:#5B6070">кэшбэк ${(+(x.rate*100).toFixed(1))}%</span>
+      <span style="display:block;font-size:.72rem;color:#8a90a0;margin-top:3px">${x.min===0?'от 0 ₽':'от '+fmt(x.min)}</span>
+    </div>`).join('');
+  const ordersHTML = (a.orders&&a.orders.length)
+    ? a.orders.map(o=>`
+      <div class="order-row">
+        <div><b style="font-family:'Unbounded',sans-serif;font-size:.86rem">№ ${o.num}</b><div style="color:#8a90a0;font-size:.82rem">${fmtDate(o.date)} · ${o.count} тов.</div></div>
+        <div style="text-align:right"><div style="font-weight:800">${fmt(o.total)}</div><div style="color:var(--blue);font-size:.8rem;font-weight:700">+${o.earned} бонусов</div></div>
+      </div>`).join('')
+    : `<p style="color:#8a90a0">Заказов пока нет. Оформи первый — и начнём копить бонусы.</p>`;
+  body.innerHTML = `
+  <div class="acc-wrap">
+    <div class="acc-hero">
+      <div>
+        <span class="tag">Личный кабинет</span>
+        <h2 style="font-size:clamp(1.6rem,3.5vw,2.3rem);font-weight:900;letter-spacing:-.02em">Привет, ${a.name.split(' ')[0]} 👋</h2>
+      </div>
+      <button class="acc-logout" onclick="accountLogout()">Выйти</button>
+    </div>
+    <div class="acc-grid">
+      <div class="lc loyal-card">
+        <div style="position:relative;z-index:2">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px"><span style="font-size:2rem">${t.icon}</span><div><div style="font-family:'Unbounded',sans-serif;font-weight:800;font-size:1.3rem">${t.name}</div><div style="opacity:.85;font-size:.85rem">${t.none?'Уровень пока не присвоен':'кэшбэк '+Math.round(t.rate*100)+'% с каждой покупки'}</div></div></div>
+          <div class="tier-bar"><i style="width:${prog}%"></i></div>
+          <div style="font-size:.82rem;opacity:.9;margin-top:8px">${next?`До уровня «${next.name}» — ${fmt(toNext)}`:'Максимальный уровень достигнут 🎉'}</div>
+        </div>
+      </div>
+      <div class="lc" style="display:flex;flex-direction:column;justify-content:center">
+        <div style="color:#8a90a0;font-weight:700;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em">Бонусный счёт</div>
+        <div style="font-family:'Unbounded',sans-serif;font-weight:900;font-size:2.2rem;color:var(--blue);line-height:1.1;margin:6px 0">${(a.bonuses||0).toLocaleString('ru-RU')}</div>
+        <div style="color:#5B6070;font-size:.85rem">1 бонус = 1 ₽ · спишешь на следующих заказах</div>
+      </div>
+    </div>
+    <div class="lc" style="margin-top:18px">
+      <div style="font-weight:800;margin-bottom:4px">Уровни программы лояльности</div>
+      <div class="tiers">${tiersHTML}</div>
+    </div>
+    <div class="acc-grid" style="margin-top:18px">
+      <div class="lc">
+        <div style="font-weight:800;margin-bottom:8px">История заказов</div>
+        ${ordersHTML}
+      </div>
+      <div class="lc">
+        <div style="font-weight:800;margin-bottom:12px">Профиль</div>
+        <div class="checkout-form" style="padding:0">
+          <div><label>Имя</label><input id="accName" value="${(a.name||'').replace(/"/g,'&quot;')}"></div>
+          <div><label>Телефон</label><input id="accPhone" type="tel" inputmode="numeric" maxlength="18" value="${a.phone||''}" oninput="formatPhone(this)"></div>
+          <div><label>Email</label><input id="accEmail" type="email" value="${a.email||''}" placeholder="—"></div>
+          <button class="btn-primary" style="margin-top:4px" onclick="accountSave()">Сохранить</button>
+        </div>
+        <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:16px">
+          <div style="font-weight:800;margin-bottom:12px">Смена пароля</div>
+          <div class="checkout-form" style="padding:0">
+            <div><label>Текущий пароль</label><div style="position:relative"><input id="curPass" type="password" placeholder="••••••" style="padding-right:74px"><button type="button" class="pass-eye" onclick="togglePass('curPass',this)">Показать</button></div></div>
+            <div><label>Новый пароль</label><div style="position:relative"><input id="newPass" type="password" placeholder="минимум 6 символов" style="padding-right:74px"><button type="button" class="pass-eye" onclick="togglePass('newPass',this)">Показать</button></div></div>
+            <div><label>Повторите новый</label><input id="newPass2" type="password" placeholder="ещё раз"></div>
+            <button class="btn-primary" style="margin-top:4px" onclick="changePassword()">Изменить пароль</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+function authHTML(a){
+  const tiersHTML = TIERS.map(x=>`
+    <div class="tier-pill">
+      <span class="ti">${x.icon}</span><b>${x.name}</b>
+      <span style="color:#5B6070">кэшбэк ${(+(x.rate*100).toFixed(1))}%</span>
+    </div>`).join('');
+  const loginCol = `
+      <div class="lc">
+        <div style="font-weight:800;margin-bottom:12px">Вход в аккаунт</div>
+        <div class="checkout-form" style="padding:0">
+          <div><label>Телефон</label><input id="liPhone" type="tel" inputmode="numeric" maxlength="18" placeholder="+7 ___ ___-__-__" oninput="formatPhone(this)" value="${a&&a.phone?a.phone:''}"></div>
+          <div><label>Пароль</label><div style="position:relative"><input id="liPass" type="password" placeholder="••••••" style="padding-right:74px"><button type="button" class="pass-eye" onclick="togglePass('liPass',this)">Показать</button></div></div>
+          <button class="btn-primary" style="margin-top:4px" onclick="accountLogin()">Войти</button>
+        </div>
+        <div style="margin-top:12px;text-align:center"><button class="inline-link" style="background:none;border:none;color:#8a90a0;font-size:.85rem;cursor:pointer;text-decoration:underline" onclick="setAccMode('forgot')">Забыли пароль?</button></div>
+        <div style="margin-top:12px;border-top:1px solid var(--line);padding-top:14px;color:#5B6070;font-size:.9rem">Нет аккаунта? <button class="inline-link" style="background:none;border:none;font-size:.9rem;cursor:pointer" onclick="setAccMode('signup')">Создать аккаунт →</button></div>
+      </div>`;
+  const signupCol = `
+      <div class="lc">
+        <div style="font-weight:800;margin-bottom:12px">Создать аккаунт</div>
+        <div class="checkout-form" style="padding:0">
+          <div><label>Имя</label><input id="suName" placeholder="Как к тебе обращаться"></div>
+          <div><label>Телефон</label><input id="suPhone" type="tel" inputmode="numeric" maxlength="18" placeholder="+7 ___ ___-__-__" oninput="formatPhone(this)"></div>
+          <div><label>Пароль</label><div style="position:relative"><input id="suPass" type="password" placeholder="минимум 6 символов" style="padding-right:74px"><button type="button" class="pass-eye" onclick="togglePass('suPass',this)">Показать</button></div></div>
+          <div><label>Email</label><input id="suEmail" type="email" placeholder="you@example.com"></div>
+          <button class="btn-primary" style="margin-top:4px" onclick="accountSignup()">Создать аккаунт</button>
+        </div>
+        <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px;color:#5B6070;font-size:.9rem">Уже есть аккаунт? <button class="inline-link" style="background:none;border:none;font-size:.9rem;cursor:pointer" onclick="setAccMode('login')">Войти →</button></div>
+      </div>`;
+  const forgotCol = `
+      <div class="lc">
+        <div style="font-weight:800;margin-bottom:6px">Восстановление пароля</div>
+        <p style="color:#5B6070;font-size:.86rem;margin:0 0 14px">Укажи email, привязанный к аккаунту — отправим на него пароль.</p>
+        <div class="checkout-form" style="padding:0">
+          <div><label>Email</label><input id="recEmail" type="email" placeholder="you@example.com"></div>
+          <button class="btn-primary" style="margin-top:4px" onclick="accountForgot()">Отправить пароль</button>
+        </div>
+        <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px;color:#5B6070;font-size:.9rem"><button class="inline-link" style="background:none;border:none;font-size:.9rem;cursor:pointer" onclick="setAccMode('login')">← Вернуться ко входу</button></div>
+      </div>`;
+  const authCol = accMode==='signup'?signupCol:(accMode==='forgot'?forgotCol:loginCol);
+  return `
+  <div class="acc-wrap">
+    <span class="tag">Личный кабинет</span>
+    <h2 style="font-size:clamp(1.6rem,3.5vw,2.3rem);font-weight:900;letter-spacing:-.02em;margin-bottom:8px">Программа лояльности ArhoShop</h2>
+    <p style="color:#5B6070;max-width:560px;margin-bottom:24px">Войдите в аккаунт, чтобы копить бонусы с каждой покупки, повышать уровень и получать до 5% кэшбэка. 1 бонус = 1 ₽.</p>
+    <div class="acc-grid">
+      ${authCol}
+      <div class="lc loyal-card" style="justify-content:center;display:flex;flex-direction:column">
+        <div style="position:relative;z-index:2">
+          <div style="font-family:'Unbounded',sans-serif;font-weight:800;font-size:1.2rem;margin-bottom:10px">До 5% бонусами</div>
+          <div style="opacity:.92;font-size:.9rem;line-height:1.8">🥉 Бронза — 1% · от 50 000 ₽<br>🥈 Серебро — 2% · от 100 000 ₽<br>🥇 Золото — 3,5% · от 250 000 ₽<br>💎 Платина — 5% · от 500 000 ₽</div>
+        </div>
+      </div>
+    </div>
+    <div class="lc" style="margin-top:18px">
+      <div style="font-weight:800;margin-bottom:4px">Как это работает</div>
+      <div class="tiers">${tiersHTML}</div>
+    </div>
+  </div>`;
+}
+async function accountSignup(){
+  const name=document.getElementById('suName').value.trim();
+  const phone=document.getElementById('suPhone').value.trim();
+  const email=document.getElementById('suEmail').value.trim();
+  const pass=document.getElementById('suPass').value;
+  if(!name){ document.getElementById('suName').classList.add('form-err'); showToast('<span>Укажи имя</span>'); return; }
+  const digits=(phone.match(/\d/g)||[]).length;
+  if(digits<11){ document.getElementById('suPhone').classList.add('form-err'); showToast('<span>Введи корректный номер телефона</span>'); return; }
+  if(pass.length<6){ document.getElementById('suPass').classList.add('form-err'); showToast('<span>Пароль — минимум 6 символов</span>'); return; }
+  document.getElementById('suPass').classList.remove('form-err');
+  const reEmail=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if(!reEmail.test(email)){ document.getElementById('suEmail').classList.add('form-err'); showToast('<span>Введи корректный email</span>'); return; }
+  document.getElementById('suEmail').classList.remove('form-err');
+  try{
+    await ArhoAuth.register({name, phone, password:pass, email});
+  }catch(e){
+    if(e.error==='phone_taken'){ document.getElementById('suPhone').classList.add('form-err'); setAccMode('login'); }
+    else if(e.error==='email_taken'){ document.getElementById('suEmail').classList.add('form-err'); setAccMode('login'); }
+    showToast('<span>'+((e&&e.message)||'Не удалось создать аккаунт')+'</span>'); return;
+  }
+  refreshAccBtn(); renderAccount();
+  showToast('<span>Аккаунт создан 🎉</span>');
+}
+async function accountForgot(){
+  const el=document.getElementById('recEmail'); const email=el.value.trim();
+  const reEmail=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if(!reEmail.test(email)){ el.classList.add('form-err'); showToast('<span>Введи корректный email</span>'); return; }
+  el.classList.remove('form-err');
+  try{ await ArhoAuth.forgot(email); }
+  catch(e){ showToast('<span>'+((e&&e.message)||'Ошибка')+'</span>'); return; }
+  document.getElementById('accountBody').innerHTML = `
+    <div class="acc-wrap"><div class="lc" style="max-width:440px;margin:0 auto;text-align:center">
+      <div style="font-size:2.6rem">📧</div>
+      <div style="font-weight:800;font-size:1.1rem;margin:10px 0 8px">Письмо отправлено</div>
+      <p style="color:#5B6070;font-size:.92rem;line-height:1.5;margin:0 0 16px">Если аккаунт с почтой <b style="color:var(--ink)">${email}</b> существует — мы отправили на него новый пароль. Проверь входящие и папку «Спам».</p>
+      <button class="inline-link" style="background:none;border:none;color:var(--blue);font-weight:700;font-size:.9rem;cursor:pointer" onclick="setAccMode('login')">← Вернуться ко входу</button>
+    </div></div>`;
+  showToast('<span>Письмо отправлено 📧</span>');
+}
+function togglePass(id, btn){
+  const el=document.getElementById(id); if(!el) return;
+  const show=el.type==='password';
+  el.type=show?'text':'password';
+  btn.textContent=show?'Скрыть':'Показать';
+}
+async function accountSave(){
+  const name=document.getElementById('accName').value.trim();
+  const phone=document.getElementById('accPhone').value.trim();
+  const email=document.getElementById('accEmail').value.trim();
+  try{ await ArhoAuth.updateProfile({name, phone, email}); }
+  catch(e){ showToast('<span>'+((e&&e.message)||'Не удалось сохранить')+'</span>'); return; }
+  refreshAccBtn(); renderAccount();
+  showToast('<span>Профиль сохранён</span>');
+}
+async function changePassword(){
+  const cur=document.getElementById('curPass').value;
+  const np=document.getElementById('newPass').value;
+  const np2=document.getElementById('newPass2').value;
+  if(np.length<6){ document.getElementById('newPass').classList.add('form-err'); showToast('<span>Новый пароль — минимум 6 символов</span>'); return; }
+  document.getElementById('newPass').classList.remove('form-err');
+  if(np!==np2){ document.getElementById('newPass2').classList.add('form-err'); showToast('<span>Пароли не совпадают</span>'); return; }
+  document.getElementById('newPass2').classList.remove('form-err');
+  try{ await ArhoAuth.changePassword(cur, np); }
+  catch(e){
+    if(e.error==='bad_current'){ document.getElementById('curPass').classList.add('form-err'); }
+    showToast('<span>'+((e&&e.message)||'Не удалось сменить пароль')+'</span>'); return;
+  }
+  document.getElementById('curPass').classList.remove('form-err');
+  renderAccount();
+  showToast('<span>Пароль изменён ✅</span>');
+}
+async function accountLogin(){
+  const el=document.getElementById('liPhone');
+  const phone=el.value.trim();
+  const pass=document.getElementById('liPass').value;
+  const digits=(phone.match(/\d/g)||[]).length;
+  if(digits<11){ el.classList.add('form-err'); showToast('<span>Введи корректный номер телефона</span>'); return; }
+  if(!pass){ document.getElementById('liPass').classList.add('form-err'); showToast('<span>Введи пароль</span>'); return; }
+  try{ await ArhoAuth.login({phone, password:pass}); }
+  catch(e){
+    if(e.error==='no_account'){ el.classList.add('form-err'); }
+    else if(e.error==='bad_credentials'){ document.getElementById('liPass').classList.add('form-err'); }
+    showToast('<span>'+((e&&e.message)||'Не удалось войти')+'</span>'); return;
+  }
+  el.classList.remove('form-err'); document.getElementById('liPass').classList.remove('form-err');
+  refreshAccBtn(); renderAccount(); showToast('<span>С возвращением 👋</span>');
+}
+function accountLogout(){
+  ArhoAuth.logout(); accMode='login'; refreshAccBtn(); renderAccount();
+  showToast('<span>Вы вышли из аккаунта</span>');
+}
+
+/* ================== ПРОЧЕЕ ================== */
+let toastTimer;
+function showToast(html){
+  const t = document.getElementById('toast');
+  t.innerHTML = html;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape'){ closeProduct(); closeCart(); }
+});
+
+/* карусель в герое: непрерывная орбита + параллакс от мыши */
+(function(){
+  const slides = [...document.querySelectorAll('.hero-slide')];
+  if(slides.length !== 3) return;
+  const wrap = document.querySelector('.hero-carousel');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // убираем пошаговые классы — позиционируем напрямую трансформами
+  slides.forEach(s=>{
+    s.classList.remove('pos-front','pos-right','pos-left');
+    s.style.transition = 'none';
+    const svg = s.querySelector('svg');
+    if(svg) svg.classList.remove('float'); // парение зашьём в орбиту
+  });
+
+  const N = slides.length;
+  const RADIUS = 36;     // % горизонтального разлёта
+  const PERIOD = 11000;  // мс на полный оборот
+  let mx = 0, my = 0;    // нормализованное положение мыши [-0.5..0.5]
+  let tmx = 0, tmy = 0;  // сглаженные значения
+  // очки нарисованы выше в своём viewBox — опускаем их, чтобы основания совпали
+  const groundAdj = slides.map(s => s.querySelector('svg[aria-label*="Очки"]') ? 0.16 : 0);
+  let H = wrap ? wrap.clientHeight : 320;
+  window.addEventListener('resize', ()=>{ H = wrap ? wrap.clientHeight : 320; }, {passive:true});
+
+  if(!reduce && wrap){
+    const hero = document.querySelector('.hero');
+    (hero || wrap).addEventListener('mousemove', e=>{
+      const r = wrap.getBoundingClientRect();
+      tmx = (e.clientX - r.left - r.width/2) / r.width;
+      tmy = (e.clientY - r.top - r.height/2) / r.height;
+    });
+    (hero || wrap).addEventListener('mouseleave', ()=>{ tmx = 0; tmy = 0; });
+  }
+
+  const t0 = performance.now();
+  function frame(t){
+    mx += (tmx - mx) * 0.08;
+    my += (tmy - my) * 0.08;
+    const base = reduce ? 0 : (t - t0) / PERIOD * Math.PI * 2;
+    slides.forEach((s, i)=>{
+      const ang = base + (i / N) * Math.PI * 2;
+      const depth = Math.cos(ang);            // 1 спереди, -1 сзади
+      const d01 = (depth + 1) / 2;            // 0..1
+      const x = Math.sin(ang) * RADIUS;        // % разлёта
+      const scale = 0.48 + d01 * 0.40;
+      const opacity = 0.4 + d01 * 0.6;
+      const bob = reduce ? 0 : Math.sin(t/1400 + i*2.1) * 10; // лёгкое парение, px
+      // параллакс: передние предметы реагируют сильнее
+      const pf = 6 + d01 * 18;
+      const px = mx * pf, py = my * pf * 0.7 + bob + groundAdj[i] * scale * H;
+      s.style.transform =
+        `translateX(${x.toFixed(2)}%) translate(${px.toFixed(1)}px, ${py.toFixed(1)}px) scale(${scale.toFixed(3)})`;
+      s.style.opacity = opacity.toFixed(2);
+      s.style.zIndex = String(Math.round(10 + depth * 6));
+      s.style.filter = `brightness(${(0.72 + d01 * 0.45).toFixed(2)})`;
+    });
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+/* падающие полоски: при скролле стекают вниз с разной скоростью */
+(function(){
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const lines = document.querySelectorAll('.fall-line');
+  const speeds = [0.38, 0.22, 0.52, 0.30, 0.44];
+  const PERIOD = 320; // шаг градиента — движение зацикливается бесшовно
+  let ticking = false;
+  window.addEventListener('scroll', ()=>{
+    if(ticking) return;
+    ticking = true;
+    requestAnimationFrame(()=>{
+      const y = window.scrollY;
+      lines.forEach((l,i)=>{
+        const t = (y * speeds[i]) % PERIOD;
+        l.style.transform = `translate3d(0, ${t.toFixed(1)}px, 0)`;
+      });
+      ticking = false;
+    });
+  }, {passive:true});
+})();
+const observer = new IntersectionObserver(entries=>{
+  entries.forEach(en=>{ if(en.isIntersecting){ en.target.classList.add('visible'); observer.unobserve(en.target);} });
+},{threshold:.12});
+
+/* старт: ленивая подгрузка каталога чанками, затем инициализация витрины */
+async function bootstrap(){
+  try{
+    await ArhoCatalog.load();
+  }catch(e){ console.error('Каталог не загрузился', e); }
+  prepareData();
+  if(!PRODUCTS.length){
+    document.body.innerHTML = '<div style="max-width:560px;margin:80px auto;padding:0 24px;font-family:sans-serif;line-height:1.6"><h2>Каталог недоступен</h2><p>Не удалось получить данные каталога (папка <b>data/</b>). Запустите сайт через сервер: <code>npm start</code> в корне проекта, затем откройте http://localhost:3000.</p></div>';
+    return;
+  }
+  buildFilters();
+  renderFeatured();
+  renderCounts();
+  applyFilters();
+  document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+  // глобальная популярность с сервера → пересборка «Популярное сейчас»
+  ArhoPopular.seed().then(ok=>{ if(ok) renderFeatured(); });
+  // восстановление сессии по сохранённому токену
+  try{ await ArhoAuth.restore(); }catch(e){}
+  refreshAccBtn();
+}
+bootstrap();
+
+/* === ГЕРОЙ: свечение за курсором === */
+(function(){
+  const hero = document.querySelector('.hero');
+  const glow = document.querySelector('.hero-glow');
+  if(!hero || !glow) return;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  hero.addEventListener('mousemove', e=>{
+    const r = hero.getBoundingClientRect();
+    const x = ((e.clientX-r.left)/r.width*100).toFixed(1);
+    const y = ((e.clientY-r.top)/r.height*100).toFixed(1);
+    glow.style.background = `radial-gradient(circle 340px at ${x}% ${y}%, rgba(91,198,255,.22), transparent 60%)`;
+  });
+  hero.addEventListener('mouseleave', ()=>{ glow.style.background = 'radial-gradient(circle 340px at 80% 30%, rgba(91,198,255,.2), transparent 60%)'; });
+})();
+
+/* === КАРТОЧКИ: 3D-наклон (делегирование на сетку каталога) === */
+(function(){
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const grid = document.getElementById('catalogGrid');
+  if(!grid) return;
+  let cur = null;
+  function reset(card){ card.style.transform=''; card.style.boxShadow=''; card.style.zIndex=''; }
+  grid.addEventListener('mousemove', e=>{
+    const card = e.target.closest('.card'); if(!card) return;
+    cur = card;
+    const r = card.getBoundingClientRect();
+    const px = (e.clientX-r.left)/r.width, py = (e.clientY-r.top)/r.height;
+    const rx = (py-.5)*-9, ry = (px-.5)*11;
+    card.style.transform = `perspective(820px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) scale(1.03)`;
+    card.style.boxShadow = '0 24px 48px rgba(11,11,16,.16)';
+    card.style.zIndex = '2';
+  });
+  grid.addEventListener('mouseout', e=>{
+    const card = e.target.closest('.card');
+    if(card && !card.contains(e.relatedTarget)) reset(card);
+  });
+  grid.addEventListener('mouseleave', ()=>{ if(cur){ reset(cur); cur=null; } });
+})();
+</script>
+
+</body>
+</html>

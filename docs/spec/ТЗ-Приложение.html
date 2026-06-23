@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ТЗ — Мобильное приложение ArhoShop</title>
+<style>
+  @page{margin:18mm}
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#16181d;line-height:1.6;max-width:860px;margin:0 auto;padding:40px 28px;font-size:15px}
+  h1{font-size:1.95rem;letter-spacing:-.02em;margin:0 0 4px}
+  .sub{color:#6b7280;margin:0 0 28px;font-size:.95rem}
+  h2{font-size:1.22rem;margin:34px 0 10px;padding-bottom:7px;border-bottom:2px solid #1E4FFF;color:#0b1020}
+  h3{font-size:1.02rem;margin:20px 0 6px}
+  ul,ol{margin:8px 0 8px 4px;padding-left:22px}
+  li{margin:4px 0}
+  code{background:#f1f3f7;padding:1px 6px;border-radius:5px;font-size:.86em}
+  table{border-collapse:collapse;width:100%;margin:12px 0;font-size:.9rem}
+  th,td{border:1px solid #e2e6ee;padding:8px 11px;text-align:left;vertical-align:top}
+  th{background:#f5f7fb;font-weight:700}
+  .tag{display:inline-block;background:#EAF0FF;color:#1E4FFF;font-weight:700;font-size:.7rem;letter-spacing:.12em;padding:5px 11px;border-radius:999px;text-transform:uppercase}
+  .box{background:#f8f9fc;border:1px solid #e8ebf2;border-radius:12px;padding:16px 18px;margin:14px 0}
+  .muted{color:#6b7280}
+  hr{border:none;border-top:1px solid #e8ebf2;margin:30px 0}
+  .sw{display:inline-block;width:13px;height:13px;border-radius:3px;vertical-align:middle;margin-right:6px;border:1px solid rgba(0,0,0,.1)}
+</style></head><body>
+
+<span class="tag">Техническое задание</span>
+<h1 style="margin-top:14px">Мобильное приложение ArhoShop</h1>
+<p class="sub">Маркетплейс оригинальных кроссовок и одежды (поставка с Poizon). Версия документа 2.0 · основано на интерактивном прототипе.</p>
+
+<h2>1. О проекте</h2>
+<p>ArhoShop — магазин оригинальных кроссовок и уличной одежды. Есть рабочий сайт; задача — выпустить мобильное приложение с тем же функционалом. Готов интерактивный прототип всех экранов (прилагается) — эталон UI/UX.</p>
+<div class="box"><b>В комплекте:</b> <code>Mobile App.dc.html</code> (витрина — открыть двойным кликом), <code>PhoneApp.dc.html</code> (приложение, вся логика), <code>app-products.js</code> (демо-товары), <code>support.js</code> (рантайм прототипа). Все файлы держать вместе.</div>
+
+<h2>2. Технологии (рекомендация)</h2>
+<ul>
+  <li><b>Клиент:</b> React Native (iOS + Android из одной кодовой базы) либо PWA как быстрый старт.</li>
+  <li><b>Бэкенд:</b> Supabase / Firebase (auth + БД + хранилище).</li>
+  <li><b>Оплата:</b> ЮKassa / Tinkoff / CloudPayments.</li>
+  <li><b>Email:</b> Resend / SendGrid / Unisender (восстановление пароля, подтверждение заказа).</li>
+  <li><b>Каталог:</b> импорт и синхронизация данных Poizon.</li>
+</ul>
+
+<h2>3. Дизайн-система</h2>
+<table>
+  <tr><th>Токен</th><th>Значение</th><th>Назначение</th></tr>
+  <tr><td><span class="sw" style="background:#1E4FFF"></span>Основной синий</td><td>#1E4FFF</td><td>кнопки, акценты, активные вкладки</td></tr>
+  <tr><td><span class="sw" style="background:#5BC6FF"></span>Голубой</td><td>#5BC6FF</td><td>вторичный акцент</td></tr>
+  <tr><td><span class="sw" style="background:#0B0B10"></span>Тёмный</td><td>#0B0B10</td><td>текст, тёмные секции</td></tr>
+  <tr><td><span class="sw" style="background:#F4F5F7"></span>Светлый фон</td><td>#F4F5F7</td><td>подложка экранов</td></tr>
+</table>
+<p>Шрифты: Unbounded (заголовки), Manrope (текст). Скругления крупные. На баннере главной — парящая 3D-моделька кроссовка. Дизайн универсальный (iOS и Android).</p>
+
+<h2>4. Навигация</h2>
+<p><b>Нижний таб-бар, 4 раздела:</b> Главная · Каталог · Корзина (со счётчиком) · Кабинет. Активная вкладка подсвечивается синим.</p>
+
+<h2>5. Экраны и функциональность</h2>
+
+<h3>5.1 Главная</h3>
+<ul>
+  <li>Промо-баннер «Новый дроп» с анимацией (парящая моделька) → ведёт в каталог.</li>
+  <li>Плитки категорий: Кроссовки, Одежда.</li>
+  <li><b>«Популярное сейчас»</b> — горизонтальная лента, ранжирование <b>по числу просмотров (кликов)</b> товара.</li>
+  <li>Блок «Новинки» — сетка 2 в ряд.</li>
+</ul>
+
+<h3>5.2 Каталог</h3>
+<ul>
+  <li>Строка поиска (по названию и бренду).</li>
+  <li>Чипы-фильтры по категориям: Все / Кроссовки / Одежда.</li>
+  <li>Сортировка <b>выпадающим списком</b>: Популярные / Сначала дешевле / Сначала дороже.</li>
+  <li>Сетка карточек 2 в ряд, кнопка «+» на карточке.</li>
+</ul>
+
+<h3>5.3 Карточка товара</h3>
+<ul>
+  <li>Фото, бренд, название, цена.</li>
+  <li>Выбор размера. <b>Добавить в корзину можно только после выбора размера.</b></li>
+  <li>Кнопка «📏 Таблица размеров» — разворачивает таблицу (обувь: EU/US/длина стопы; одежда: размер/грудь/длина).</li>
+  <li>Текст гарантий: «Проверка подлинности, доставка по всей стране. Возврат 14 дней.»</li>
+  <li>Кнопка «Добавить в корзину».</li>
+</ul>
+
+<h3>5.4 Быстрое добавление</h3>
+<ul>
+  <li>Кнопка «+» на карточке открывает нижний шит с выбором размера (не добавляет сразу). Добавление — после выбора размера.</li>
+</ul>
+
+<h3>5.5 Корзина и оформление</h3>
+<ul>
+  <li>Список товаров: фото, бренд, название, размер, изменение количества (+/−), удаление.</li>
+  <li>Итог: сумма товаров, доставка, итого.</li>
+  <li>Форма: Имя, Телефон (маска +7, 11 цифр), Город — <b>все обязательны</b>. Если пользователь вошёл — имя и телефон подставляются автоматически.</li>
+  <li>Выбор способа доставки: Курьером до двери / Пункт выдачи / Почтой России.</li>
+  <li>Экран успеха: номер заказа + начисленные бонусы.</li>
+</ul>
+
+<h3>5.6 Личный кабинет и аутентификация</h3>
+<ul>
+  <li><b>Вход:</b> телефон + пароль (с «Показать/Скрыть»). Только для существующего аккаунта; неверный пароль — ошибка.</li>
+  <li><b>Регистрация:</b> Имя, Телефон, Пароль (под телефоном, мин. 6 симв., с «Показать/Скрыть»), Email — все обязательны.</li>
+  <li><b>Уникальность:</b> один телефон = один аккаунт, одна почта = один аккаунт.</li>
+  <li><b>«Забыли пароль?»:</b> ввод привязанного email → отправка пароля на почту.</li>
+  <li><b>Дашборд:</b> карточка уровня лояльности с прогресс-баром, баланс бонусов, сумма покупок, список уровней, история заказов.</li>
+</ul>
+
+<h2>6. Программа лояльности</h2>
+<p>Бонусы начисляются с каждой покупки по ставке текущего уровня. 1 бонус = 1 ₽. Уровень — по сумме всех покупок; кэшбэк по уровню на момент покупки.</p>
+<table>
+  <tr><th>Уровень</th><th>Порог (сумма покупок)</th><th>Кэшбэк</th></tr>
+  <tr><td>Без уровня</td><td>до 50 000 ₽</td><td>0%</td></tr>
+  <tr><td>🥉 Бронза</td><td>от 50 000 ₽</td><td>1%</td></tr>
+  <tr><td>🥈 Серебро</td><td>от 100 000 ₽</td><td>2%</td></tr>
+  <tr><td>🥇 Золото</td><td>от 250 000 ₽</td><td>3,5%</td></tr>
+  <tr><td>💎 Платина</td><td>от 500 000 ₽</td><td>5%</td></tr>
+</table>
+
+<h2>7. Модель данных (минимум)</h2>
+<ul>
+  <li><b>User</b>: id, name, phone (уникальный), email (уникальный), passwordHash, createdAt.</li>
+  <li><b>Loyalty</b>: userId, spent, bonuses, tier.</li>
+  <li><b>Order</b>: id (номер), userId, items[{productId, size, qty, price}], total, delivery, status, earnedBonuses, createdAt.</li>
+  <li><b>Product</b>: id, name, brand, category, subcategory, price, sizes[], images[], sizeChart.</li>
+</ul>
+
+<h2>8. Бизнес-правила (повторить точно)</h2>
+<ol>
+  <li>«Популярное сейчас» сортируется по числу просмотров товара.</li>
+  <li>Нельзя добавить товар в корзину без выбора размера.</li>
+  <li>Все поля регистрации и оформления обязательны; телефон — 11 цифр, email — по формату, пароль — мин. 6 символов.</li>
+  <li>Один телефон = один аккаунт; одна почта = один аккаунт.</li>
+  <li>Кэшбэк рассчитывается по уровню на момент покупки.</li>
+</ol>
+
+<h2>9. Этапы</h2>
+<table>
+  <tr><th>Этап</th><th>Содержание</th></tr>
+  <tr><td>1. Каркас</td><td>Навигация, экраны, верстка по прототипу, каталог из статичных данных.</td></tr>
+  <tr><td>2. Бэкенд</td><td>Auth (телефон+пароль), БД, профиль, восстановление пароля.</td></tr>
+  <tr><td>3. Корзина/заказы</td><td>Корзина, оформление, доставка, история, лояльность.</td></tr>
+  <tr><td>4. Оплата</td><td>Платёжный провайдер.</td></tr>
+  <tr><td>5. Каталог</td><td>Импорт/синхронизация полного каталога, поиск, фильтры.</td></tr>
+  <tr><td>6. Релиз</td><td>Сборка и публикация (App Store / Google Play) или PWA.</td></tr>
+</table>
+
+<hr>
+<p class="muted">Эталон UI/UX — прилагаемый <code>Mobile App.dc.html</code>. Бренд: основной синий #1E4FFF, акцент #5BC6FF, тёмный #0B0B10. Шрифты: Unbounded, Manrope.</p>
+
+</body></html>

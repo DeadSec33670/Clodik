@@ -1,0 +1,15 @@
+{
+  "name": "ArhoShop",
+  "short_name": "ArhoShop",
+  "description": "Оригинальные кроссовки и уличная одежда — доставка по всей стране.",
+  "lang": "ru",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F4F5F7",
+  "theme_color": "#1E4FFF",
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
