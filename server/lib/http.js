@@ -85,6 +85,15 @@ function createServer(router) {
       ok: (body) => send(res, 200, body),
       created: (body) => send(res, 201, body),
       error: (status, code, msg) => send(res, status, { error: code, message: msg }),
+      // произвольный ответ (напр. CSV-выгрузка)
+      raw: (status, text, contentType, extraHeaders = {}) => {
+        res.writeHead(status, {
+          'Content-Type': contentType,
+          'Access-Control-Allow-Origin': '*',
+          ...extraHeaders,
+        });
+        res.end(text);
+      },
     };
 
     // Авторизация (если есть токен) — заполняет ctx.user

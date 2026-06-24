@@ -111,18 +111,33 @@ try {
   assert.equal(r.status, 401); ok('админ: пользовательский токен не даёт доступ');
   r = await api('POST', '/api/admin/login', { password: 'admin' });
   assert.equal(r.status, 200); const adminToken = r.data.token; ok('админ: вход по паролю');
-  r = await api('GET', '/api/admin/stats', null, adminToken);
+  r = await api('GET', '/api/admin/stats?period=30d', null, adminToken);
   assert.equal(r.status, 200);
-  assert.equal(r.data.totals.orders, 2, 'в статистике 2 заказа');
-  assert.equal(r.data.totals.revenue, 160000, 'выручка 160 000');
-  assert.equal(r.data.users, 1, 'клиентов: 1'); ok('админ: сводная статистика заказов');
+  assert.equal(r.data.kpis.orders, 2, 'в статистике 2 заказа');
+  assert.equal(r.data.kpis.revenue, 160000, 'выручка 160 000');
+  assert.equal(r.data.totals.users, 1, 'клиентов: 1');
+  assert.ok(Array.isArray(r.data.series), 'есть временной ряд');
+  assert.ok(r.data.kpis.growth, 'есть сравнение с прошлым периодом'); ok('админ: статистика с периодом и сравнением');
   r = await api('GET', '/api/admin/orders?limit=10', null, adminToken);
-  assert.equal(r.status, 200); assert.equal(r.data.orders.length, 2); ok('админ: список заказов');
+  assert.equal(r.status, 200); assert.equal(r.data.orders.length, 2); assert.equal(r.data.total, 2); ok('админ: список заказов с пагинацией');
   const oid = r.data.orders[0].id;
+  r = await api('GET', `/api/admin/orders/${oid}`, null, adminToken);
+  assert.equal(r.status, 200); assert.equal(r.data.order.id, oid); ok('админ: карточка заказа');
+  r = await api('GET', '/api/admin/customers?sort=spent', null, adminToken);
+  assert.equal(r.status, 200); assert.equal(r.data.customers.length, 1); assert.equal(r.data.customers[0].ordersCount, 2); ok('админ: список клиентов');
   r = await api('PATCH', `/api/admin/orders/${oid}/status`, { status: 'shipped' }, adminToken);
   assert.equal(r.status, 200); assert.equal(r.data.status, 'shipped'); ok('админ: смена статуса заказа');
   r = await api('PATCH', `/api/admin/orders/${oid}/status`, { status: 'bogus' }, adminToken);
   assert.equal(r.status, 400); ok('админ: недопустимый статус отклонён');
+  // CSV-экспорт
+  {
+    const res = await fetch(BASE + '/api/admin/orders/export', { headers: { Authorization: 'Bearer ' + adminToken } });
+    const text = await res.text();
+    assert.equal(res.status, 200);
+    assert.ok(res.headers.get('content-type').includes('text/csv'), 'CSV content-type');
+    assert.ok(text.includes('Номер') && text.split('\r\n').length >= 3, 'CSV содержит заголовок и строки');
+    ok('админ: экспорт заказов в CSV');
+  }
 
   console.log(`\n✅ Все проверки пройдены (${passed})`);
   srv.kill();

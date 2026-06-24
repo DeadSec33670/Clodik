@@ -37,7 +37,10 @@ router.get('/api/products/popular', catalog.popular);
 router.post('/api/admin/login', admin.login);
 router.get('/api/admin/stats', admin.stats);
 router.get('/api/admin/orders', admin.orders);
+router.get('/api/admin/orders/export', admin.exportOrders);
+router.get('/api/admin/orders/:id', admin.orderDetail);
 router.patch('/api/admin/orders/:id/status', admin.updateOrderStatus);
+router.get('/api/admin/customers', admin.customers);
 
 // --- Статика: сайт (/), приложение (/app), данные каталога (/data) ---
 const MIME = {
