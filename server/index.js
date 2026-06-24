@@ -6,6 +6,7 @@ const auth = require('./routes/auth');
 const profile = require('./routes/profile');
 const orders = require('./routes/orders');
 const catalog = require('./routes/catalog');
+const admin = require('./routes/admin');
 
 const PORT = Number(process.env.PORT || 3000);
 const ROOT = path.join(__dirname, '..');
@@ -32,6 +33,12 @@ router.post('/api/orders', orders.createOrder);
 router.post('/api/products/:id/view', catalog.view);
 router.get('/api/products/popular', catalog.popular);
 
+// Админ-панель
+router.post('/api/admin/login', admin.login);
+router.get('/api/admin/stats', admin.stats);
+router.get('/api/admin/orders', admin.orders);
+router.patch('/api/admin/orders/:id/status', admin.updateOrderStatus);
+
 // --- Статика: сайт (/), приложение (/app), данные каталога (/data) ---
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
@@ -45,6 +52,7 @@ function serveStatic(req, res) {
   // маршрутизация статических корней
   let filePath;
   if (pathname === '/' || pathname === '/index.html') filePath = path.join(ROOT, 'site', 'index.html');
+  else if (pathname === '/admin' || pathname === '/admin/') filePath = path.join(ROOT, 'site', 'admin.html');
   else if (pathname === '/app' || pathname === '/app/') filePath = path.join(ROOT, 'app', 'index.html');
   else if (pathname.startsWith('/app/')) filePath = path.join(ROOT, 'app', pathname.slice(5));
   else if (pathname.startsWith('/data/')) filePath = path.join(ROOT, 'site', 'data', pathname.slice(6));

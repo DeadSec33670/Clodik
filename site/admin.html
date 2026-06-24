@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ArhoShop — Админ-панель</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--blue:#1E4FFF;--sky:#5BC6FF;--ink:#0B0B10;--bg:#F4F5F7;--line:#E6E8EE;--white:#fff;--mut:#8a90a0}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--ink)}
+  h1,h2,h3{font-family:'Unbounded',sans-serif;letter-spacing:-.02em;margin:0}
+  a{color:var(--blue)}
+  .top{display:flex;align-items:center;justify-content:space-between;padding:18px 26px;background:var(--ink);color:#fff;position:sticky;top:0;z-index:10}
+  .top .brand{font-family:'Unbounded',sans-serif;font-weight:900;font-size:1.15rem}
+  .top .brand span{color:var(--sky)}
+  .top .right{display:flex;gap:10px;align-items:center;font-size:.9rem}
+  .btn{border:none;border-radius:999px;background:var(--blue);color:#fff;font-weight:800;padding:11px 18px;cursor:pointer;font-family:inherit;font-size:.9rem;transition:background .2s,transform .15s}
+  .btn:hover{background:#1640d6;transform:translateY(-1px)}
+  .btn.ghost{background:rgba(255,255,255,.12)}
+  .wrap{max-width:1160px;margin:0 auto;padding:26px}
+  /* login */
+  .login{max-width:380px;margin:9vh auto;background:#fff;border-radius:22px;padding:30px;box-shadow:0 24px 60px rgba(11,11,16,.12)}
+  .login h2{font-size:1.4rem;margin-bottom:6px}
+  .login p{color:var(--mut);font-size:.9rem;margin:0 0 18px}
+  label{font-weight:800;font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px}
+  input,select{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;font-family:inherit;font-size:.95rem;font-weight:500}
+  input:focus,select:focus{outline:none;border-color:var(--blue)}
+  .err{color:#d12; font-size:.85rem;margin-top:8px;min-height:1em}
+  /* cards */
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px}
+  .card{background:#fff;border-radius:18px;padding:18px;box-shadow:0 8px 26px rgba(11,11,16,.05)}
+  .kpi .lbl{color:var(--mut);font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em}
+  .kpi .val{font-family:'Unbounded',sans-serif;font-weight:900;font-size:1.55rem;margin-top:6px;line-height:1.1}
+  .kpi .val.blue{color:var(--blue)}
+  .grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-bottom:18px}
+  .grid2b{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+  h3.sec{font-size:1rem;margin-bottom:14px}
+  /* bar chart */
+  .bars{display:flex;align-items:flex-end;gap:8px;height:180px;padding-top:10px}
+  .bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+  .bar i{display:block;width:70%;background:linear-gradient(180deg,var(--sky),var(--blue));border-radius:6px 6px 0 0;transition:height .5s cubic-bezier(.16,1,.3,1);min-height:2px}
+  .bar small{font-size:.66rem;color:var(--mut);white-space:nowrap}
+  .bar b{font-size:.68rem;font-weight:800}
+  /* status pills */
+  .stat-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:.9rem}
+  .stat-row:last-child{border-bottom:none}
+  .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.74rem;font-weight:800}
+  .s-created{background:#eef;color:#33c}.s-paid{background:#e6f8ee;color:#1a9d52}.s-pending_payment{background:#fff4e0;color:#c87f12}
+  .s-shipped{background:#e9f0ff;color:#1E4FFF}.s-delivered{background:#e6f8ee;color:#0a7d3e}.s-cancelled{background:#fdecec;color:#d12}
+  table{width:100%;border-collapse:collapse;font-size:.88rem}
+  th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line)}
+  th{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mut)}
+  td.num,th.num{text-align:right}
+  .mini-sel{padding:6px 8px;border-radius:8px;font-size:.82rem}
+  .muted{color:var(--mut)}
+  .tierbar{height:8px;border-radius:999px;background:var(--line);overflow:hidden;margin-top:6px}
+  .tierbar>i{display:block;height:100%;background:var(--blue)}
+  .hidden{display:none}
+  @media(max-width:860px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2,.grid2b{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginView">
+  <div class="login">
+    <h2>Админ-панель</h2>
+    <p>ArhoShop · статистика заказов</p>
+    <label>Пароль администратора</label>
+    <input id="pw" type="password" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="err" id="loginErr"></div>
+    <button class="btn" style="width:100%;margin-top:6px" onclick="doLogin()">Войти</button>
+    <p style="margin-top:14px;font-size:.8rem">← <a href="/">На сайт</a></p>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashView" class="hidden">
+  <div class="top">
+    <div class="brand">Arho<span>Shop</span> · Админ</div>
+    <div class="right">
+      <a href="/" style="color:#fff;opacity:.8;text-decoration:none">Сайт ↗</a>
+      <button class="btn ghost" onclick="refreshAll()">Обновить</button>
+      <button class="btn ghost" onclick="logout()">Выйти</button>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="kpis" id="kpis"></div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3 class="sec">Заказы и выручка по дням (14 дней)</h3>
+        <div class="bars" id="dayBars"></div>
+      </div>
+      <div class="card">
+        <h3 class="sec">Заказы по статусам</h3>
+        <div id="statusList"></div>
+      </div>
+    </div>
+
+    <div class="grid2b">
+      <div class="card">
+        <h3 class="sec">Топ товаров по продажам</h3>
+        <table id="topProducts"><thead><tr><th>Товар</th><th class="num">Шт.</th><th class="num">Выручка</th></tr></thead><tbody></tbody></table>
+      </div>
+      <div class="card">
+        <h3 class="sec">Клиенты по уровням лояльности</h3>
+        <div id="tierDist"></div>
+        <h3 class="sec" style="margin-top:18px">Топ клиентов</h3>
+        <table id="topUsers"><thead><tr><th>Клиент</th><th class="num">Покупок</th><th class="num">Бонусы</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="sec">Последние заказы</h3>
+      <div style="overflow-x:auto">
+        <table id="ordersTable">
+          <thead><tr><th>№</th><th>Клиент</th><th>Состав</th><th>Доставка</th><th class="num">Сумма</th><th class="num">Бонусы</th><th>Дата</th><th>Статус</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '/api/admin';
+const TKEY = 'arho_admin_token';
+let STATUSES = ['created','pending_payment','paid','shipped','delivered','cancelled'];
+const ST_LABEL = {created:'Создан',pending_payment:'Ожидает оплаты',paid:'Оплачен',shipped:'Отправлен',delivered:'Доставлен',cancelled:'Отменён'};
+
+function token(){ return localStorage.getItem(TKEY)||''; }
+function fmt(n){ return (Number(n)||0).toLocaleString('ru-RU')+' ₽'; }
+function fmtNum(n){ return (Number(n)||0).toLocaleString('ru-RU'); }
+function fmtDate(ts){ return new Date(ts).toLocaleDateString('ru-RU',{day:'2-digit',month:'short'})+' '+new Date(ts).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+async function api(method, path, body){
+  const headers={'Content-Type':'application/json'};
+  if(token()) headers.Authorization='Bearer '+token();
+  const res=await fetch(API+path,{method,headers,body:body?JSON.stringify(body):undefined});
+  let data=null; try{ data=await res.json(); }catch(e){}
+  if(!res.ok) throw (data||{error:'http_'+res.status});
+  return data;
+}
+
+async function doLogin(){
+  const pw=document.getElementById('pw').value;
+  const errEl=document.getElementById('loginErr'); errEl.textContent='';
+  try{
+    const r=await api('POST','/login',{password:pw});
+    localStorage.setItem(TKEY,r.token);
+    showDash();
+  }catch(e){ errEl.textContent=(e&&e.message)||'Не удалось войти'; }
+}
+function logout(){ localStorage.removeItem(TKEY); location.reload(); }
+
+function showDash(){
+  document.getElementById('loginView').classList.add('hidden');
+  document.getElementById('dashView').classList.remove('hidden');
+  refreshAll();
+}
+
+async function refreshAll(){
+  try{
+    const [s, o] = await Promise.all([ api('GET','/stats'), api('GET','/orders?limit=80') ]);
+    renderStats(s); renderOrders(o.orders);
+  }catch(e){
+    if(e && e.error==='unauthorized'){ logout(); return; }
+    alert('Ошибка загрузки: '+((e&&e.message)||e.error||''));
+  }
+}
+
+function renderStats(s){
+  // KPI
+  document.getElementById('kpis').innerHTML = [
+    ['Заказов', fmtNum(s.totals.orders), ''],
+    ['Выручка', fmt(s.totals.revenue), 'blue'],
+    ['Средний чек', fmt(s.totals.avgOrder), ''],
+    ['Клиентов', fmtNum(s.users), ''],
+    ['Начислено бонусов', fmtNum(s.totals.bonusesIssued), 'blue'],
+  ].map(([l,v,c])=>`<div class="card kpi"><div class="lbl">${l}</div><div class="val ${c}">${v}</div></div>`).join('');
+
+  // bar chart by day
+  const days=s.byDay||[];
+  const maxRev=Math.max(1,...days.map(d=>d.rev));
+  document.getElementById('dayBars').innerHTML = days.length ? days.map(d=>{
+    const h=Math.round((d.rev/maxRev)*100);
+    const dd=new Date(d.d+'T00:00:00').toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'});
+    return `<div class="bar" title="${dd}: ${fmt(d.rev)} · ${d.c} зак."><b>${d.c}</b><i style="height:${h}%"></i><small>${dd}</small></div>`;
+  }).join('') : '<p class="muted">Пока нет заказов.</p>';
+
+  // statuses
+  const byS={}; (s.byStatus||[]).forEach(r=>byS[r.status]=r);
+  document.getElementById('statusList').innerHTML = STATUSES.map(st=>{
+    const r=byS[st]||{c:0,rev:0};
+    return `<div class="stat-row"><span class="pill s-${st}">${ST_LABEL[st]||st}</span><span>${fmtNum(r.c)} · <b>${fmt(r.rev)}</b></span></div>`;
+  }).join('');
+
+  // top products
+  document.querySelector('#topProducts tbody').innerHTML = (s.topProducts||[]).length
+    ? s.topProducts.map(p=>`<tr><td>${esc((p.name||'—').slice(0,42))}</td><td class="num">${fmtNum(p.qty)}</td><td class="num">${fmt(p.revenue)}</td></tr>`).join('')
+    : '<tr><td colspan="3" class="muted">Нет данных</td></tr>';
+
+  // tier distribution
+  const td=s.loyalty.tierDist||{}; const tiers=s.loyalty.tiers||[];
+  const totalU=Math.max(1,s.users);
+  const allTiers=[{key:'none',name:'Без уровня',icon:'⚪'}].concat(tiers.filter(t=>t.key!=='none'));
+  document.getElementById('tierDist').innerHTML = allTiers.map(t=>{
+    const c=td[t.key]||0; const pct=Math.round(c/totalU*100);
+    return `<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:.86rem"><span>${t.icon||''} ${t.name}</span><b>${fmtNum(c)}</b></div><div class="tierbar"><i style="width:${pct}%"></i></div></div>`;
+  }).join('');
+
+  // top users
+  document.querySelector('#topUsers tbody').innerHTML = (s.topUsers||[]).length
+    ? s.topUsers.map(u=>`<tr><td>${esc(u.name)}<div class="muted" style="font-size:.78rem">${esc(u.phone)}</div></td><td class="num">${fmt(u.spent)}</td><td class="num">${fmtNum(u.bonuses)}</td></tr>`).join('')
+    : '<tr><td colspan="3" class="muted">Нет клиентов</td></tr>';
+}
+
+function renderOrders(orders){
+  const tb=document.querySelector('#ordersTable tbody');
+  if(!orders.length){ tb.innerHTML='<tr><td colspan="8" class="muted">Заказов пока нет</td></tr>'; return; }
+  tb.innerHTML = orders.map(o=>{
+    const cust = o.customer||{};
+    const items = (o.items||[]).map(i=>`${esc((i.name||'').slice(0,24))} (${esc(i.size)})×${i.qty}`).join(', ');
+    const sel = `<select class="mini-sel" onchange="changeStatus('${o.id}',this.value,this)">`+
+      STATUSES.map(st=>`<option value="${st}" ${st===o.status?'selected':''}>${ST_LABEL[st]||st}</option>`).join('')+`</select>`;
+    return `<tr>
+      <td><b>${esc(o.id)}</b></td>
+      <td>${esc(cust.name||'Гость')}<div class="muted" style="font-size:.78rem">${esc(cust.phone||'')}${cust.registered?'':' · гость'}</div></td>
+      <td style="max-width:260px">${items||'—'}</td>
+      <td>${esc(o.delivery||'—')}<div class="muted" style="font-size:.78rem">${esc(o.city||'')}</div></td>
+      <td class="num"><b>${fmt(o.total)}</b></td>
+      <td class="num">${fmtNum(o.earnedBonuses)}</td>
+      <td class="muted" style="white-space:nowrap">${fmtDate(o.createdAt)}</td>
+      <td>${sel}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function changeStatus(id, status, el){
+  el.disabled=true;
+  try{ await api('PATCH','/orders/'+encodeURIComponent(id)+'/status',{status}); refreshAll(); }
+  catch(e){ alert('Не удалось обновить статус: '+((e&&e.message)||'')); el.disabled=false; }
+}
+
+// автологин если есть токен
+if(token()){ showDash(); }
+</script>
+</body>
+</html>

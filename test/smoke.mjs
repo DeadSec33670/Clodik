@@ -104,6 +104,26 @@ try {
   r = await api('GET', '/api/products/popular?limit=5');
   assert.equal(r.data.items[0].product_id, 'p1'); assert.equal(r.data.items[0].views, 2); ok('популярность по числу просмотров');
 
+  // 11. Админ-панель: вход, статистика, смена статуса заказа
+  r = await api('POST', '/api/admin/login', { password: 'wrong' });
+  assert.equal(r.status, 401); ok('админ: неверный пароль → ошибка');
+  r = await api('GET', '/api/admin/stats', null, token); // пользовательский токен не админский
+  assert.equal(r.status, 401); ok('админ: пользовательский токен не даёт доступ');
+  r = await api('POST', '/api/admin/login', { password: 'admin' });
+  assert.equal(r.status, 200); const adminToken = r.data.token; ok('админ: вход по паролю');
+  r = await api('GET', '/api/admin/stats', null, adminToken);
+  assert.equal(r.status, 200);
+  assert.equal(r.data.totals.orders, 2, 'в статистике 2 заказа');
+  assert.equal(r.data.totals.revenue, 160000, 'выручка 160 000');
+  assert.equal(r.data.users, 1, 'клиентов: 1'); ok('админ: сводная статистика заказов');
+  r = await api('GET', '/api/admin/orders?limit=10', null, adminToken);
+  assert.equal(r.status, 200); assert.equal(r.data.orders.length, 2); ok('админ: список заказов');
+  const oid = r.data.orders[0].id;
+  r = await api('PATCH', `/api/admin/orders/${oid}/status`, { status: 'shipped' }, adminToken);
+  assert.equal(r.status, 200); assert.equal(r.data.status, 'shipped'); ok('админ: смена статуса заказа');
+  r = await api('PATCH', `/api/admin/orders/${oid}/status`, { status: 'bogus' }, adminToken);
+  assert.equal(r.status, 400); ok('админ: недопустимый статус отклонён');
+
   console.log(`\n✅ Все проверки пройдены (${passed})`);
   srv.kill();
   process.exit(0);
