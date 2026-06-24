@@ -1,0 +1,16 @@
+{
+  "name": "arhoshop",
+  "version": "1.0.0",
+  "description": "ArhoShop — интернет-магазин кроссовок и одежды: сайт + PWA-приложение + бэкенд (auth, заказы, лояльность).",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "start": "node --experimental-sqlite --env-file-if-exists=.env server/index.js",
+    "dev": "node --experimental-sqlite --env-file-if-exists=.env --watch server/index.js",
+    "build:catalog": "node scripts/split-products.mjs",
+    "test": "node --experimental-sqlite test/smoke.mjs"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  }
+}

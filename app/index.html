@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1E4FFF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="./manifest.webmanifest">
+<title>ArhoShop</title>
+<script src="./api.js"></script>
+<script src="./support.js"></script>
+<script>
+  // Регистрация service worker (PWA: установка + офлайн-оболочка)
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+  }
+</script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="app-products.js"></script>
+<style>
+  *{box-sizing:border-box}
+  .pa-scroll::-webkit-scrollbar{width:0;height:0}
+  .pa-scroll{scrollbar-width:none}
+  @keyframes paFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes paSheet{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  @keyframes paPop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+  @keyframes heroFloat{0%{transform:rotate(-14deg) translateY(0)}50%{transform:rotate(-9deg) translateY(-12px)}100%{transform:rotate(-14deg) translateY(0)}}
+  @keyframes heroRing{to{transform:rotate(360deg)}}
+  .hero-img{animation:heroFloat 4.5s ease-in-out infinite;will-change:transform}
+  .hero-ring{animation:heroRing 14s linear infinite}
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif;display:flex;align-items:center;justify-content:center">
+  <!-- DEVICE -->
+  <div style="position:relative;width:392px;height:812px;background:#0B0B10;border-radius:54px;padding:13px;box-shadow:0 40px 90px rgba(11,11,16,.45),inset 0 0 0 2px rgba(255,255,255,.06);flex:none">
+    <div style="position:relative;width:100%;height:100%;background:#F4F5F7;border-radius:42px;overflow:hidden;display:flex;flex-direction:column">
+
+      <!-- status bar -->
+      <div style="height:46px;flex:none;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 7px;background:{{ topBg }};color:{{ topFg }};position:relative;z-index:5">
+        <span style="font-weight:700;font-size:.82rem;letter-spacing:.02em">9:41</span>
+        <span style="display:flex;align-items:center;gap:6px">
+          <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"></rect><rect x="4.5" y="4" width="3" height="7" rx="1"></rect><rect x="9" y="2" width="3" height="9" rx="1"></rect><rect x="13.5" y="0" width="3" height="11" rx="1"></rect></svg>
+          <svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="2.5" stroke="currentColor" opacity=".5"></rect><rect x="2" y="2" width="13" height="7" rx="1" fill="currentColor"></rect><rect x="20" y="3.5" width="1.5" height="4" rx=".75" fill="currentColor" opacity=".5"></rect></svg>
+        </span>
+      </div>
+
+      <!-- top bar -->
+      <div style="flex:none;display:flex;align-items:center;gap:12px;padding:6px 18px 12px;background:{{ topBg }};color:{{ topFg }};position:relative;z-index:5">
+        <sc-if value="{{ isDrawer }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ toggleDrawer }}" style="background:none;border:none;padding:4px;cursor:pointer;color:inherit;display:flex">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"></path></svg>
+          </button>
+        </sc-if>
+        <div style="font-family:'Unbounded',sans-serif;font-weight:900;font-size:1.15rem;letter-spacing:-.02em;flex:1">Arho<span style="color:#5BC6FF">Shop</span></div>
+        <button onClick="{{ goCart }}" style="position:relative;background:none;border:none;padding:4px;cursor:pointer;color:inherit;display:flex">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h15l-1.5 9h-12z"></path><path d="M6 6L5 2H2"></path><circle cx="9" cy="20" r="1.4"></circle><circle cx="18" cy="20" r="1.4"></circle></svg>
+          <span style="position:absolute;top:-4px;right:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#1E4FFF;color:#fff;font-size:.62rem;font-weight:800;display:{{ badgeShow }};align-items:center;justify-content:center;line-height:17px;text-align:center">{{ cartCount }}</span>
+        </button>
+      </div>
+
+      <!-- VIEWPORT -->
+      <div class="pa-scroll" style="flex:1;overflow-y:auto;overflow-x:hidden;position:relative;background:#F4F5F7">
+
+        <!-- ===== HOME ===== -->
+        <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:16px 16px 24px;animation:paFade .3s ease">
+          <div onClick="{{ heroOpen }}" style="position:relative;border-radius:22px;overflow:hidden;background:linear-gradient(135deg,#1E4FFF,#0B0B10);color:#fff;padding:22px;min-height:248px;display:flex;flex-direction:column;justify-content:flex-end;cursor:pointer">
+            <div style="position:absolute;inset:0;background:radial-gradient(circle at 82% 22%,rgba(91,198,255,.5),transparent 60%)"></div>
+            <div style="position:absolute;top:18px;left:22px;font-family:'Manrope';font-weight:800;font-size:.62rem;letter-spacing:.2em;color:#5BC6FF">НОВЫЙ ДРОП</div>
+            <svg class="hero-img" viewBox="0 0 720 460" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position:absolute;right:-30px;top:64px;width:215px;filter:drop-shadow(0 18px 26px rgba(0,0,0,.4))">
+              <defs><clipPath id="heroAj"><path d="M70 356 C68 330 78 308 102 298 C128 288 154 284 180 278 C224 268 264 252 300 232 C322 220 338 204 348 184 C356 166 360 146 364 124 C368 104 380 92 398 92 C418 92 436 98 452 110 C470 122 488 130 508 136 C540 148 568 166 588 192 C606 218 614 280 614 356 Z"></path></clipPath></defs>
+              <path d="M52 372 C44 362 50 352 68 350 L620 350 C642 350 654 358 654 370 C654 382 642 390 622 391 L120 394 C90 394 64 388 52 372 Z" fill="#FFFFFF"></path>
+              <path d="M60 376 C80 386 104 391 132 392 L608 389 C626 388 638 383 646 375" stroke="#1E4FFF" stroke-width="9" stroke-linecap="round" fill="none"></path>
+              <path d="M70 356 C68 330 78 308 102 298 C128 288 154 284 180 278 C224 268 264 252 300 232 C322 220 338 204 348 184 C356 166 360 146 364 124 C368 104 380 92 398 92 C418 92 436 98 452 110 C470 122 488 130 508 136 C540 148 568 166 588 192 C606 218 614 280 614 356 Z" fill="#FFFFFF"></path>
+              <g clip-path="url(#heroAj)">
+                <path d="M-20 420 L-20 240 C50 270 122 286 184 282 C180 310 166 334 148 358 L142 420 Z" fill="#1E4FFF"></path>
+                <path d="M296 240 C318 226 334 208 344 186 C352 168 356 148 360 126 C364 108 374 98 390 96 L420 96 C404 100 396 110 392 128 C388 150 384 172 374 192 C362 216 344 236 322 252 Z" fill="#1E4FFF"></path>
+                <path d="M386 90 C412 90 434 100 452 112 C472 126 492 134 514 140 C540 147 562 158 582 174 L568 204 C546 188 522 176 498 168 C474 160 452 148 434 136 C416 124 400 112 382 104 Z" fill="#1E4FFF"></path>
+                <path d="M390 97 C414 99 434 108 452 120 C472 133 494 142 518 149 C540 156 560 166 576 178" stroke="#5BC6FF" stroke-width="9" stroke-linecap="round" fill="none"></path>
+                <path d="M536 150 L720 150 L720 366 L556 366 C548 290 542 218 536 150 Z" fill="#1E4FFF"></path>
+              </g>
+              <g stroke="#FFFFFF" stroke-width="9" stroke-linecap="round"><path d="M306 238 L334 256"></path><path d="M322 216 L352 232"></path><path d="M334 194 L366 208"></path><path d="M344 172 L376 184"></path><path d="M352 150 L384 160"></path><path d="M358 128 L390 136"></path><path d="M366 108 L396 114"></path></g>
+            </svg>
+            <div style="position:relative;z-index:2">
+              <div style="font-family:'Unbounded',sans-serif;font-weight:900;font-size:1.7rem;line-height:1;letter-spacing:-.02em;max-width:62%">Шаг,<br>который<br>заметят</div>
+              <div style="margin-top:12px;display:inline-flex;background:#fff;color:#0B0B10;font-weight:800;font-size:.8rem;padding:9px 18px;border-radius:999px">Смотреть каталог →</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:11px;margin-top:18px">
+            <button onClick="{{ goCatSneakers }}" style="flex:1;border:none;background:#fff;border-radius:16px;padding:15px;text-align:left;cursor:pointer;box-shadow:0 4px 14px rgba(11,11,16,.05)">
+              <div style="font-size:1.5rem">👟</div><div style="font-weight:800;font-size:.85rem;margin-top:6px;color:#0B0B10">Кроссовки</div><div style="font-size:.72rem;color:#8a90a0">16 моделей</div>
+            </button>
+            <button onClick="{{ goCatClothing }}" style="flex:1;border:none;background:#fff;border-radius:16px;padding:15px;text-align:left;cursor:pointer;box-shadow:0 4px 14px rgba(11,11,16,.05)">
+              <div style="font-size:1.5rem">🧥</div><div style="font-weight:800;font-size:.85rem;margin-top:6px;color:#0B0B10">Одежда</div><div style="font-size:.72rem;color:#8a90a0">12 позиций</div>
+            </button>
+          </div>
+
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin:24px 0 13px">
+            <div style="font-family:'Unbounded',sans-serif;font-weight:800;font-size:1.05rem;color:#0B0B10">Популярное сейчас</div>
+            <button onClick="{{ goCatalog }}" style="background:none;border:none;color:#1E4FFF;font-weight:700;font-size:.8rem;cursor:pointer">Всё</button>
+          </div>
+          <div class="pa-scroll" style="display:flex;gap:13px;overflow-x:auto;margin:0 -16px;padding:0 16px 4px">
+            <sc-for list="{{ featured }}" as="item" hint-placeholder-count="4">
+              <div onClick="{{ item.open }}" style="flex:none;width:150px;background:#fff;border-radius:18px;overflow:hidden;cursor:pointer;box-shadow:0 4px 14px rgba(11,11,16,.05)">
+                <div style="height:130px;display:flex;align-items:center;justify-content:center;padding:10px;background:#fff"><img src="{{ item.im }}" alt="" style="max-width:100%;max-height:100%;object-fit:contain" onError="{{ imgErr }}"></div>
+                <div style="padding:11px 12px 13px">
+                  <div style="font-size:.64rem;font-weight:700;color:#8a90a0;text-transform:uppercase;letter-spacing:.04em">{{ item.b }}</div>
+                  <div style="font-weight:700;font-size:.76rem;color:#0B0B10;margin:3px 0 8px;height:2.1em;overflow:hidden;line-height:1.05">{{ item.n }}</div>
+                  <div style="font-family:'Unbounded',sans-serif;font-weight:700;font-size:.82rem;color:#0B0B10">{{ item.priceFmt }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="font-family:'Unbounded',sans-serif;font-weight:800;font-size:1.05rem;color:#0B0B10;margin:26px 0 13px">Новинки</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px">
+            <sc-for list="{{ newItems }}" as="item" hint-placeholder-count="4">
+              <div onClick="{{ item.open }}" style="background:#fff;border-radius:18px;overflow:hidden;cursor:pointer;box-shadow:0 4px 14px rgba(11,11,16,.05)">
+                <div style="height:128px;display:flex;align-items:center;justify-content:center;padding:10px"><img src="{{ item.im }}" alt="" style="max-width:100%;max-height:100%;object-fit:contain" onError="{{ imgErr }}"></div>
+                <div style="padding:11px 12px 13px">
+                  <div style="font-size:.64rem;font-weight:700;color:#8a90a0;text-transform:uppercase">{{ item.b }}</div>
+                  <div style="font-weight:700;font-size:.76rem;color:#0B0B10;margin:3px 0 8px;height:2.1em;overflow:hidden;line-height:1.05">{{ item.n }}</div>
+                  <div style="display:flex;align-items:center;justify-content:space-between">
+                    <span style="font-family:'Unbounded',sans-serif;font-weight:700;font-size:.82rem;color:#0B0B10">{{ item.priceFmt }}</span>
+                    <button onClick="{{ item.add }}" style="width:30px;height:30px;border:none;border-radius:50%;background:#EAF6FF;color:#1E4FFF;font-size:1.1rem;cursor:pointer;line-height:1">+</button>
+                  </div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===== CATALOG ===== -->
+        <sc-if value="{{ isCatalog }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:16px 16px 24px;animation:paFade .3s ease">
+          <div style="display:flex;align-items:center;gap:9px;background:#fff;border-radius:14px;padding:11px 14px;box-shadow:0 4px 14px rgba(11,11,16,.05)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8a90a0" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4-4"></path></svg>
+            <input value="{{ query }}" onInput="{{ onSearchInput }}" placeholder="Поиск по каталогу" style="border:none;outline:none;flex:1;font-family:'Manrope';font-size:.9rem;background:none;color:#0B0B10">
+          </div>
+          <div class="pa-scroll" style="display:flex;gap:8px;overflow-x:auto;margin:14px -16px 0;padding:0 16px">
+            <sc-for list="{{ catChips }}" as="item" hint-placeholder-count="3">
+              <button onClick="{{ item.select }}" style="flex:none;border:1.5px solid {{ item.bc }};background:{{ item.bg }};color:{{ item.fg }};font-weight:700;font-size:.8rem;padding:8px 16px;border-radius:999px;cursor:pointer">{{ item.label }}</button>
+            </sc-for>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 13px;position:relative">
+            <span style="color:#8a90a0;font-size:.8rem;font-weight:600">{{ catalogCount }}</span>
+            <button onClick="{{ toggleFilter }}" style="display:flex;align-items:center;gap:6px;background:#fff;border:1.5px solid #E8EAEE;border-radius:11px;padding:8px 13px;color:#0B0B10;font-weight:700;font-size:.82rem;cursor:pointer">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"></path></svg>{{ sortLabel }}
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8a90a0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate({{ sortChevron }})"><path d="m6 9 6 6 6-6"></path></svg>
+            </button>
+            <div style="position:absolute;top:46px;right:0;z-index:12;background:#fff;border:1px solid #E8EAEE;border-radius:14px;box-shadow:0 12px 32px rgba(11,11,16,.14);overflow:hidden;min-width:172px;display:{{ sortMenuDisplay }}">
+              <sc-for list="{{ sortOptions }}" as="item" hint-placeholder-count="3">
+                <button onClick="{{ item.select }}" style="display:flex;align-items:center;justify-content:space-between;width:100%;background:{{ item.bg }};border:none;padding:12px 15px;cursor:pointer;color:{{ item.fg }};font-weight:{{ item.fw }};font-size:.86rem;text-align:left">
+                  {{ item.label }}<span style="color:#1E4FFF;font-weight:800;display:{{ item.checkDisplay }}">✓</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px">
+            <sc-for list="{{ catalogItems }}" as="item" hint-placeholder-count="6">
+              <div onClick="{{ item.open }}" style="background:#fff;border-radius:18px;overflow:hidden;cursor:pointer;box-shadow:0 4px 14px rgba(11,11,16,.05)">
+                <div style="height:128px;display:flex;align-items:center;justify-content:center;padding:10px"><img src="{{ item.im }}" alt="" style="max-width:100%;max-height:100%;object-fit:contain" onError="{{ imgErr }}"></div>
+                <div style="padding:11px 12px 13px">
+                  <div style="font-size:.64rem;font-weight:700;color:#8a90a0;text-transform:uppercase">{{ item.b }}</div>
+                  <div style="font-weight:700;font-size:.76rem;color:#0B0B10;margin:3px 0 8px;height:2.1em;overflow:hidden;line-height:1.05">{{ item.n }}</div>
+                  <div style="display:flex;align-items:center;justify-content:space-between">
+                    <span style="font-family:'Unbounded',sans-serif;font-weight:700;font-size:.82rem;color:#0B0B10">{{ item.priceFmt }}</span>
+                    <button onClick="{{ item.add }}" style="width:30px;height:30px;border:none;border-radius:50%;background:#EAF6FF;color:#1E4FFF;font-size:1.1rem;cursor:pointer;line-height:1">+</button>
+                  </div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===== PRODUCT ===== -->
+        <sc-if value="{{ isProduct }}" hint-placeholder-val="{{ false }}">
+        <div style="animation:paFade .3s ease">
+          <div style="position:relative;background:#fff;padding:14px 16px 24px">
+            <button onClick="{{ goBack }}" style="position:absolute;top:14px;left:16px;z-index:2;width:38px;height:38px;border:none;border-radius:50%;background:#F4F5F7;cursor:pointer;display:flex;align-items:center;justify-content:center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B0B10" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+            </button>
+            <div style="height:300px;display:flex;align-items:center;justify-content:center;padding:30px 10px 10px"><img src="{{ selImg }}" alt="" style="max-width:100%;max-height:100%;object-fit:contain" onError="{{ imgErr }}"></div>
+          </div>
+          <div style="background:#F4F5F7;margin-top:-18px;border-radius:22px 22px 0 0;padding:22px 18px 30px;position:relative">
+            <div style="font-size:.7rem;font-weight:800;color:#8a90a0;text-transform:uppercase;letter-spacing:.05em">{{ selBrand }}</div>
+            <div style="font-weight:800;font-size:1.12rem;color:#0B0B10;margin:5px 0 10px;line-height:1.2">{{ selName }}</div>
+            <div style="font-family:'Unbounded',sans-serif;font-weight:900;font-size:1.5rem;color:#0B0B10;margin-bottom:18px">{{ selPriceFmt }}</div>
+            <div style="font-weight:800;font-size:.85rem;color:#0B0B10;margin-bottom:10px">Размер <span style="color:{{ needSizeColor }};font-weight:700">{{ needSizeText }}</span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:9px;margin-bottom:22px">
+              <sc-for list="{{ selSizes }}" as="item" hint-placeholder-count="6">
+                <button onClick="{{ item.select }}" style="min-width:52px;padding:11px 6px;border:1.5px solid {{ item.bc }};background:{{ item.bg }};color:{{ item.fg }};border-radius:12px;font-weight:700;font-size:.85rem;cursor:pointer">{{ item.label }}</button>
+              </sc-for>
+            </div>
+            <button onClick="{{ toggleChart }}" style="display:flex;align-items:center;justify-content:space-between;width:100%;background:#fff;border:1.5px solid #E8EAEE;border-radius:14px;padding:14px 15px;cursor:pointer;font-family:'Manrope';font-weight:700;font-size:.86rem;color:#0B0B10;margin-bottom:14px">
+              <span style="display:flex;align-items:center;gap:8px">📏 Таблица размеров</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8a90a0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate({{ chartChevron }})"><path d="m6 9 6 6 6-6"></path></svg>
+            </button>
+            <div style="display:{{ chartDisplay }};background:#fff;border:1px solid #E8EAEE;border-radius:14px;overflow:hidden;margin-bottom:14px">
+              <div class="pa-scroll" style="overflow-x:auto">
+                <div style="min-width:330px">
+                  <div style="display:flex;background:#0B0B10;color:#fff">
+                    <sc-for list="{{ chartHeadCells }}" as="cell" hint-placeholder-count="6">
+                      <div style="flex:1;padding:9px 6px;font-weight:800;font-size:.74rem;text-align:center;min-width:46px">{{ cell.v }}</div>
+                    </sc-for>
+                  </div>
+                  <sc-for list="{{ chartRowsV }}" as="row" hint-placeholder-count="2">
+                    <div style="display:flex;border-top:1px solid #F0F1F4">
+                      <div style="flex:1;padding:9px 6px;font-weight:700;font-size:.74rem;text-align:center;min-width:46px;color:#5B6070;background:#F8F9FB">{{ row.name }}</div>
+                      <sc-for list="{{ row.cells }}" as="cell" hint-placeholder-count="5">
+                        <div style="flex:1;padding:9px 6px;font-size:.74rem;text-align:center;min-width:46px;color:#0B0B10">{{ cell.v }}</div>
+                      </sc-for>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+            <div style="background:#fff;border-radius:16px;padding:15px;font-size:.82rem;color:#5B6070;line-height:1.55">Проверка подлинности, доставка по всей стране. Возврат 14 дней.</div>
+            <button onClick="{{ addCurrent }}" style="width:100%;margin-top:18px;background:#1E4FFF;color:#fff;border:none;font-weight:800;font-size:.95rem;padding:16px;border-radius:16px;cursor:pointer">Добавить в корзину</button>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===== CART ===== -->
+        <sc-if value="{{ isCart }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:16px 16px 28px;animation:paFade .3s ease">
+          <div style="font-family:'Unbounded',sans-serif;font-weight:800;font-size:1.2rem;color:#0B0B10;margin-bottom:16px">{{ cartTitle }}</div>
+
+          <sc-if value="{{ coCart }}" hint-placeholder-val="{{ true }}">
+            <sc-if value="{{ cartEmpty }}" hint-placeholder-val="{{ false }}">
+              <div style="text-align:center;padding:60px 20px;color:#8a90a0">
+                <div style="font-size:3rem;margin-bottom:12px">🛒</div>
+                <div style="font-weight:700;color:#0B0B10;margin-bottom:6px">Корзина пуста</div>
+                <div style="font-size:.85rem;margin-bottom:18px">Добавь что-нибудь из каталога</div>
+                <button onClick="{{ goCatalog }}" style="background:#1E4FFF;color:#fff;border:none;font-weight:800;font-size:.88rem;padding:13px 26px;border-radius:999px;cursor:pointer">В каталог</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ cartHasItems }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <sc-for list="{{ cartItems }}" as="item" hint-placeholder-count="2">
+                  <div style="display:grid;grid-template-columns:74px 1fr auto;gap:12px;background:#fff;border-radius:16px;padding:11px;box-shadow:0 4px 14px rgba(11,11,16,.05)">
+                    <div style="width:74px;height:74px;background:#F4F5F7;border-radius:12px;display:flex;align-items:center;justify-content:center;padding:6px"><img src="{{ item.im }}" alt="" style="max-width:100%;max-height:100%;object-fit:contain" onError="{{ imgErr }}"></div>
+                    <div style="min-width:0">
+                      <div style="font-size:.62rem;font-weight:700;color:#8a90a0;text-transform:uppercase">{{ item.b }}</div>
+                      <div style="font-weight:700;font-size:.78rem;color:#0B0B10;margin:2px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ item.n }}</div>
+                      <div style="font-size:.72rem;color:#8a90a0">Размер {{ item.sizeLabel }}</div>
+                      <div style="font-family:'Unbounded',sans-serif;font-weight:700;font-size:.82rem;color:#0B0B10;margin-top:4px">{{ item.priceFmt }}</div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between">
+                      <button onClick="{{ item.remove }}" style="background:none;border:none;color:#c0c4cc;font-size:1rem;cursor:pointer;padding:2px">✕</button>
+                      <div style="display:flex;align-items:center;gap:9px;background:#F4F5F7;border-radius:999px;padding:5px 9px">
+                        <button onClick="{{ item.dec }}" style="background:none;border:none;font-size:1rem;cursor:pointer;color:#0B0B10;line-height:1;width:14px">−</button>
+                        <span style="font-weight:800;font-size:.82rem;min-width:14px;text-align:center">{{ item.qty }}</span>
+                        <button onClick="{{ item.inc }}" style="background:none;border:none;font-size:1rem;cursor:pointer;color:#0B0B10;line-height:1;width:14px">+</button>
+                      </div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="background:#fff;border-radius:16px;padding:16px;margin-top:14px;box-shadow:0 4px 14px rgba(11,11,16,.05)">
+                <div style="display:flex;justify-content:space-between;color:#5B6070;font-size:.85rem;margin-bottom:7px"><span>Товары</span><span>{{ cartTotalFmt }}</span></div>
+                <div style="display:flex;justify-content:space-between;color:#5B6070;font-size:.85rem;margin-bottom:12px"><span>Доставка</span><span style="color:#1F8A5B;font-weight:700">Бесплатно</span></div>
+                <div style="display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid #E8EAEE;padding-top:12px"><span style="font-weight:800;color:#0B0B10">Итого</span><span style="font-family:'Unbounded',sans-serif;font-weight:900;font-size:1.25rem;color:#0B0B10">{{ cartTotalFmt }}</span></div>
+              </div>
+              <button onClick="{{ goCheckoutForm }}" style="width:100%;margin-top:16px;background:#1E4FFF;color:#fff;border:none;font-weight:800;font-size:.95rem;padding:16px;border-radius:16px;cursor:pointer">Оформить заказ</button>
+            </sc-if>
+          </sc-if>
+
+          <sc-if value="{{ coForm }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:13px">
+              <div><div style="font-weight:800;font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;color:#5B6070;margin-bottom:6px">Имя</div><input value="{{ fName }}" onInput="{{ setFName }}" placeholder="Как к тебе обращаться" style="width:100%;border:1.5px solid {{ fNameBc }};border-radius:13px;padding:13px 14px;font-family:'Manrope';font-size:.92rem;outline:none;background:#fff"></div>
+              <div><div style="font-weight:800;font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;color:#5B6070;margin-bottom:6px">Телефон</div><input value="{{ fPhone }}" onInput="{{ setFPhone }}" inputmode="numeric" placeholder="+7 ___ ___-__-__" style="width:100%;border:1.5px solid {{ fPhoneBc }};border-radius:13px;padding:13px 14px;font-family:'Manrope';font-size:.92rem;outline:none;background:#fff"></div>
+              <div><div style="font-weight:800;font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;color:#5B6070;margin-bottom:6px">Город</div><input value="{{ fCity }}" onInput="{{ setFCity }}" placeholder="Город доставки" style="width:100%;border:1.5px solid {{ fCityBc }};border-radius:13px;padding:13px 14px;font-family:'Manrope';font-size:.92rem;outline:none;background:#fff"></div>
+              <div>
+                <div style="font-weight:800;font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;color:#5B6070;margin-bottom:8px">Способ доставки</div>
+                <div style="display:flex;flex-direction:column;gap:9px">
+                  <sc-for list="{{ deliveryOptions }}" as="item" hint-placeholder-count="3">
+                    <button onClick="{{ item.select }}" style="display:flex;align-items:center;gap:12px;width:100%;background:{{ item.bg }};border:1.5px solid {{ item.bc }};border-radius:13px;padding:13px 14px;cursor:pointer;text-align:left">
+                      <span style="font-size:1.3rem">{{ item.icon }}</span>
+                      <span style="flex:1;font-weight:700;font-size:.88rem;color:#0B0B10">{{ item.label }}</span>
+                      <span style="width:20px;height:20px;border-radius:50%;border:2px solid {{ item.dotBc }};background:{{ item.dot }};flex:none;box-shadow:inset 0 0 0 3px #fff"></span>
+                    </button>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="background:#fff;border-radius:14px;padding:14px;display:flex;justify-content:space-between;align-items:baseline;box-shadow:0 4px 14px rgba(11,11,16,.05)"><span style="font-weight:800;color:#0B0B10">К оплате</span><span style="font-family:'Unbounded',sans-serif;font-weight:900;font-size:1.15rem">{{ cartTotalFmt }}</span></div>
+              <button onClick="{{ placeOrder }}" style="width:100%;background:#1E4FFF;color:#fff;border:none;font-weight:800;font-size:.95rem;padding:16px;border-radius:16px;cursor:pointer">Подтвердить заказ</button>
+              <button onClick="{{ backToCart }}" style="width:100%;background:none;color:#8a90a0;border:none;font-weight:700;font-size:.85rem;padding:4px;cursor:pointer">← Вернуться в корзину</button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ coDone }}" hint-placeholder-val="{{ false }}">
+            <div style="text-align:center;padding:30px 10px">
+              <div style="font-size:3.4rem;animation:paPop .5s ease">🎉</div>
+              <div style="font-family:'Unbounded',sans-serif;font-weight:800;font-size:1.3rem;color:#0B0B10;margin:14px 0 8px">Заказ оформлен!</div>
+              <div style="color:#5B6070;font-size:.9rem;line-height:1.5;margin-bottom:6px">Сумма {{ doneTotalFmt }}. Мы свяжемся для подтверждения. Это демо — оплата не списывается.</div>
+              <div style="display:inline-block;background:#fff;border-radius:12px;padding:9px 18px;font-weight:800;color:#0B0B10;margin-bottom:18px">Заказ № {{ doneNum }}</div>
+              <div style="background:linear-gradient(135deg,#1E4FFF,#0B0B10);color:#fff;border-radius:16px;padding:16px;margin-bottom:18px">Начислено <b style="color:#5BC6FF">{{ doneEarned }} бонусов</b> в программе лояльности</div>
+              <button onClick="{{ goAccount }}" style="width:100%;background:#1E4FFF;color:#fff;border:none;font-weight:800;font-size:.92rem;padding:15px;border-radius:15px;cursor:pointer;margin-bottom:10px">Открыть кабинет</button>
+              <button onClick="{{ continueShop }}" style="width:100%;background:none;color:#8a90a0;border:none;font-weight:700;font-size:.85rem;cursor:pointer">Продолжить покупки</button>
+            </div>
+          </sc-if>
+        </div>
+        </sc-if>
+
+        <!-- ===== ACCOUNT ===== -->
+        <sc-if value="{{ isAccount }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:16px 16px 28px;animation:paFade .3s ease">
+          <sc-if value="{{ accLogged }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+              <div style="font-family:'Unbounded',sans-serif;font-weight:800;font-size:1.25rem;color:#0B0B10">Привет, {{ accFirst }} 👋</div>
+              <button onClick="{{ logout }}" style="background:none;border:1.5px solid #E8EAEE;color:#8a90a0;font-weight:700;font-size:.78rem;padding:8px 14px;border-radius:999px;cursor:pointer">Выйти</button>
+            </div>
+            <div style="position:relative;overflow:hidden;background:linear-gradient(135deg,#1E4FFF,#0B0B10);color:#fff;border-radius:20px;padding:20px">
+              <div style="position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(91,198,255,.5),transparent 70%)"></div>
+              <div style="position:relative;z-index:2">
+                <div style="display:flex;align-items:center;gap:11px;margin-bottom:14px"><span style="font-size:1.7rem">{{ tierIcon }}</span><div><div style="font-family:'Unbounded',sans-serif;font-weight:800;font-size:1.15rem">{{ tierName }}</div><div style="opacity:.85;font-size:.78rem">{{ tierSub }}</div></div></div>
+                <div style="height:9px;border-radius:999px;background:rgba(255,255,255,.22);overflow:hidden"><div style="height:100%;width:{{ progPct }};background:#5BC6FF;border-radius:999px"></div></div>
+                <div style="font-size:.78rem;opacity:.9;margin-top:8px">{{ toNextLabel }}</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:13px">
+              <div style="flex:1;background:#fff;border-radius:16px;padding:15px;box-shadow:0 4px 14px rgba(11,11,16,.05)">
+                <div style="color:#8a90a0;font-weight:700;font-size:.66rem;text-transform:uppercase;letter-spacing:.05em">Бонусы</div>
+                <div style="font-family:'Unbounded',sans-serif;font-weight:900;font-size:1.5rem;color:#1E4FFF;margin-top:4px">{{ bonuses }}</div>
+                <div style="color:#8a90a0;font-size:.72rem">1 бонус = 1 ₽</div>
+              </div>
+              <div style="flex:1;background:#fff;border-radius:16px;padding:15px;box-shadow:0 4px 14px rgba(11,11,16,.05)">
+                <div style="color:#8a90a0;font-weight:700;font-size:.66rem;text-transform:uppercase;letter-spacing:.05em">Куплено на</div>
+                <div style="font-family:'Unbounded',sans-serif;font-weight:900;font-size:1.5rem;color:#0B0B10;margin-top:4px">{{ spentShort }}</div>
+                <div style="color:#8a90a0;font-size:.72rem">всего заказов: {{ ordersCount }}</div>
+              </div>
+            </div>
+            <div style="font-weight:800;font-size:.95rem;color:#0B0B10;margin:22px 0 12px">Уровни</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <sc-for list="{{ tiersList }}" as="item" hint-placeholder-count="4">
+                <div style="border:1.5px solid {{ item.bc }};background:{{ item.bg }};border-radius:14px;padding:13px;text-align:center">
+                  <div style="font-size:1.4rem">{{ item.icon }}</div>
+                  <div style="font-family:'Unbounded',sans-serif;font-weight:700;font-size:.78rem;color:#0B0B10;margin:3px 0">{{ item.name }}</div>
+                  <div style="color:#5B6070;font-size:.72rem">{{ item.rateLabel }}</div>
+                  <div style="color:#8a90a0;font-size:.68rem;margin-top:2px">{{ item.minLabel }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="font-weight:800;font-size:.95rem;color:#0B0B10;margin:22px 0 12px">История заказов</div>
+            <div style="background:#fff;border-radius:16px;padding:4px 16px;box-shadow:0 4px 14px rgba(11,11,16,.05)">
+              <sc-for list="{{ ordersList }}" as="item" hint-placeholder-count="1">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid #F0F1F4">
+                  <div><div style="font-family:'Unbounded',sans-serif;font-weight:700;font-size:.8rem;color:#0B0B10">№ {{ item.num }}</div><div style="color:#8a90a0;font-size:.74rem">{{ item.dateLabel }} · {{ item.countLabel }}</div></div>
+                  <div style="text-align:right"><div style="font-weight:800;font-size:.85rem;color:#0B0B10">{{ item.totalFmt }}</div><div style="color:#1E4FFF;font-size:.74rem;font-weight:700">+{{ item.earned }}</div></div>
+                </div>
+              </sc-for>
+              <sc-if value="{{ ordersEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:18px 0;color:#8a90a0;font-size:.85rem;text-align:center">Заказов пока нет</div></sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ accGuest }}" hint-placeholder-val="{{ true }}">
+            <div style="font-family:'Unbounded',sans-serif;font-weight:800;font-size:1.3rem;color:#0B0B10;margin-bottom:6px">Программа лояльности</div>
+            <div style="color:#5B6070;font-size:.88rem;line-height:1.5;margin-bottom:18px">Копи бонусы с каждой покупки и получай до 5% кэшбэка. 1 бонус = 1 ₽.</div>
+            <div style="background:linear-gradient(135deg,#1E4FFF,#0B0B10);color:#fff;border-radius:18px;padding:18px;margin-bottom:18px">
+              <div style="font-family:'Unbounded',sans-serif;font-weight:800;font-size:1.05rem;margin-bottom:9px">До 5% бонусами</div>
+              <div style="opacity:.92;font-size:.84rem;line-height:1.75">🥉 Бронза — 1% · от 50 000 ₽<br>🥈 Серебро — 2% · от 100 000 ₽<br>🥇 Золото — 3,5% · от 250 000 ₽<br>💎 Платина — 5% · от 500 000 ₽</div>
+            </div>
+
+            <sc-if value="{{ authIsLogin }}" hint-placeholder-val="{{ true }}">
+              <div style="background:#fff;border-radius:18px;padding:18px;box-shadow:0 4px 14px rgba(11,11,16,.05)">
+                <div style="font-weight:800;font-size:1rem;color:#0B0B10;margin-bottom:13px">Вход в аккаунт</div>
+                <div style="font-weight:800;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#5B6070;margin-bottom:6px">Телефон</div>
+                <input value="{{ aPhone }}" onInput="{{ setAPhone }}" inputmode="numeric" placeholder="+7 ___ ___-__-__" style="width:100%;border:1.5px solid {{ aPhoneBc }};border-radius:13px;padding:13px 14px;font-family:'Manrope';font-size:.92rem;outline:none;margin-bottom:11px">
+                <div style="font-weight:800;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#5B6070;margin-bottom:6px">Пароль</div>
+                <div style="position:relative;margin-bottom:13px">
+                  <input value="{{ aPass }}" onInput="{{ setAPass }}" type="{{ passType }}" placeholder="••••••" style="width:100%;border:1.5px solid {{ aPassBc }};border-radius:13px;padding:13px 60px 13px 14px;font-family:'Manrope';font-size:.92rem;outline:none">
+                  <button onClick="{{ toggleShowPass }}" type="button" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#1E4FFF;font-weight:700;font-size:.76rem;cursor:pointer;padding:6px 8px">{{ passToggleLabel }}</button>
+                </div>
+                <button onClick="{{ doLogin }}" style="width:100%;background:#1E4FFF;color:#fff;border:none;font-weight:800;font-size:.92rem;padding:15px;border-radius:14px;cursor:pointer">Войти</button>
+                <div style="text-align:center;margin-top:12px"><button onClick="{{ switchToForgot }}" style="background:none;border:none;color:#8a90a0;font-weight:600;font-size:.82rem;cursor:pointer;text-decoration:underline">Забыли пароль?</button></div>
+                <div style="text-align:center;margin-top:10px;padding-top:13px;border-top:1px solid #F0F1F4;color:#5B6070;font-size:.85rem">Нет аккаунта? <button onClick="{{ switchToSignup }}" style="background:none;border:none;color:#1E4FFF;font-weight:700;font-size:.85rem;cursor:pointer">Создать →</button></div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ authIsForgot }}" hint-placeholder-val="{{ false }}">
+              <div style="background:#fff;border-radius:18px;padding:18px;box-shadow:0 4px 14px rgba(11,11,16,.05)">
+                <sc-if value="{{ forgotNotSent }}" hint-placeholder-val="{{ true }}">
+                  <div style="font-weight:800;font-size:1rem;color:#0B0B10;margin-bottom:6px">Восстановление пароля</div>
+                  <div style="color:#5B6070;font-size:.84rem;line-height:1.5;margin-bottom:14px">Укажи email, привязанный к аккаунту — отправим на него пароль.</div>
+                  <div style="font-weight:800;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#5B6070;margin-bottom:6px">Email</div>
+                  <input value="{{ recEmail }}" onInput="{{ setRecEmail }}" inputmode="email" placeholder="you@example.com" style="width:100%;border:1.5px solid {{ recEmailBc }};border-radius:13px;padding:13px 14px;font-family:'Manrope';font-size:.92rem;outline:none;margin-bottom:13px">
+                  <button onClick="{{ doForgot }}" style="width:100%;background:#1E4FFF;color:#fff;border:none;font-weight:800;font-size:.92rem;padding:15px;border-radius:14px;cursor:pointer">Отправить пароль</button>
+                </sc-if>
+                <sc-if value="{{ forgotSent }}" hint-placeholder-val="{{ false }}">
+                  <div style="text-align:center;padding:8px 0">
+                    <div style="font-size:2.6rem;margin-bottom:8px">📧</div>
+                    <div style="font-weight:800;font-size:1rem;color:#0B0B10;margin-bottom:8px">Письмо отправлено</div>
+                    <div style="color:#5B6070;font-size:.86rem;line-height:1.5">Сообщение с паролем от аккаунта отправлено на <b style="color:#0B0B10">{{ forgotEmail }}</b>. Проверь входящие и папку «Спам».</div>
+                  </div>
+                </sc-if>
+                <div style="text-align:center;margin-top:14px;padding-top:13px;border-top:1px solid #F0F1F4;color:#5B6070;font-size:.85rem"><button onClick="{{ switchToLogin }}" style="background:none;border:none;color:#1E4FFF;font-weight:700;font-size:.85rem;cursor:pointer">← Вернуться ко входу</button></div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ authIsSignup }}" hint-placeholder-val="{{ false }}">
+              <div style="background:#fff;border-radius:18px;padding:18px;box-shadow:0 4px 14px rgba(11,11,16,.05)">
+                <div style="font-weight:800;font-size:1rem;color:#0B0B10;margin-bottom:13px">Создать аккаунт</div>
+                <div style="font-weight:800;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#5B6070;margin-bottom:6px">Имя</div>
+                <input value="{{ aName }}" onInput="{{ setAName }}" placeholder="Как к тебе обращаться" style="width:100%;border:1.5px solid {{ aNameBc }};border-radius:13px;padding:13px 14px;font-family:'Manrope';font-size:.92rem;outline:none;margin-bottom:11px">
+                <div style="font-weight:800;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#5B6070;margin-bottom:6px">Телефон</div>
+                <input value="{{ aPhone }}" onInput="{{ setAPhone }}" inputmode="numeric" placeholder="+7 ___ ___-__-__" style="width:100%;border:1.5px solid {{ aPhoneBc }};border-radius:13px;padding:13px 14px;font-family:'Manrope';font-size:.92rem;outline:none;margin-bottom:11px">
+                <div style="font-weight:800;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#5B6070;margin-bottom:6px">Пароль</div>
+                <div style="position:relative;margin-bottom:11px">
+                  <input value="{{ aPass }}" onInput="{{ setAPass }}" type="{{ passType }}" placeholder="минимум 6 символов" style="width:100%;border:1.5px solid {{ aPassBc }};border-radius:13px;padding:13px 60px 13px 14px;font-family:'Manrope';font-size:.92rem;outline:none">
+                  <button onClick="{{ toggleShowPass }}" type="button" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#1E4FFF;font-weight:700;font-size:.76rem;cursor:pointer;padding:6px 8px">{{ passToggleLabel }}</button>
+                </div>
+                <div style="font-weight:800;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#5B6070;margin-bottom:6px">Email</div>
+                <input value="{{ aEmail }}" onInput="{{ setAEmail }}" inputmode="email" placeholder="you@example.com" style="width:100%;border:1.5px solid {{ aEmailBc }};border-radius:13px;padding:13px 14px;font-family:'Manrope';font-size:.92rem;outline:none;margin-bottom:13px">
+                <button onClick="{{ doSignup }}" style="width:100%;background:#1E4FFF;color:#fff;border:none;font-weight:800;font-size:.92rem;padding:15px;border-radius:14px;cursor:pointer">Создать аккаунт</button>
+                <div style="text-align:center;margin-top:14px;padding-top:13px;border-top:1px solid #F0F1F4;color:#5B6070;font-size:.85rem">Уже есть аккаунт? <button onClick="{{ switchToLogin }}" style="background:none;border:none;color:#1E4FFF;font-weight:700;font-size:.85rem;cursor:pointer">Войти →</button></div>
+              </div>
+            </sc-if>
+          </sc-if>
+        </div>
+        </sc-if>
+
+      </div>
+
+      <!-- BOTTOM TABS -->
+      <sc-if value="{{ isTabs }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:none;display:flex;background:#fff;border-top:1px solid #ECEEF1;padding:9px 6px 20px">
+        <button onClick="{{ goHome }}" style="flex:1;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;color:{{ colHome }}">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg>
+          <span style="font-size:.62rem;font-weight:700">Главная</span>
+        </button>
+        <button onClick="{{ goCatalog }}" style="flex:1;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;color:{{ colCatalog }}">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>
+          <span style="font-size:.62rem;font-weight:700">Каталог</span>
+        </button>
+        <button onClick="{{ goCart }}" style="flex:1;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;color:{{ colCart }};position:relative">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h15l-1.5 9h-12z"></path><path d="M6 6L5 2H2"></path><circle cx="9" cy="20" r="1.4"></circle><circle cx="18" cy="20" r="1.4"></circle></svg>
+          <span style="position:absolute;top:-3px;right:24px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#1E4FFF;color:#fff;font-size:.6rem;font-weight:800;display:{{ badgeShow }};align-items:center;justify-content:center;line-height:16px;text-align:center">{{ cartCount }}</span>
+          <span style="font-size:.62rem;font-weight:700">Корзина</span>
+        </button>
+        <button onClick="{{ goAccount }}" style="flex:1;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;color:{{ colAccount }}">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"></path></svg>
+          <span style="font-size:.62rem;font-weight:700">Кабинет</span>
+        </button>
+      </div>
+      </sc-if>
+
+      <!-- DRAWER -->
+      <sc-if value="{{ isDrawer }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ closeDrawer }}" style="position:absolute;inset:0;background:rgba(11,11,16,.5);z-index:18;opacity:{{ scrimOpacity }};pointer-events:{{ scrimPe }};transition:opacity .3s"></div>
+      <div style="position:absolute;top:0;left:0;bottom:0;width:80%;max-width:300px;background:#fff;z-index:19;transform:translateX({{ drawerX }});transition:transform .32s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;padding:20px 0;box-shadow:14px 0 40px rgba(0,0,0,.18)">
+        <div style="padding:6px 22px 18px;font-family:'Unbounded',sans-serif;font-weight:900;font-size:1.3rem;color:#0B0B10">Arho<span style="color:#5BC6FF">Shop</span></div>
+        <button onClick="{{ goHome }}" style="display:flex;align-items:center;gap:14px;background:{{ mHomeBg }};border:none;border-left:3px solid {{ mHomeAc }};padding:15px 22px;cursor:pointer;color:{{ mHome }};font-weight:700;font-size:.95rem;text-align:left">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg>Главная
+        </button>
+        <button onClick="{{ goCatalog }}" style="display:flex;align-items:center;gap:14px;background:{{ mCatBg }};border:none;border-left:3px solid {{ mCatAc }};padding:15px 22px;cursor:pointer;color:{{ mCat }};font-weight:700;font-size:.95rem;text-align:left">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>Каталог
+        </button>
+        <button onClick="{{ goCart }}" style="display:flex;align-items:center;gap:14px;background:{{ mCartBg }};border:none;border-left:3px solid {{ mCartAc }};padding:15px 22px;cursor:pointer;color:{{ mCart }};font-weight:700;font-size:.95rem;text-align:left">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h15l-1.5 9h-12z"></path><path d="M6 6L5 2H2"></path><circle cx="9" cy="20" r="1.4"></circle><circle cx="18" cy="20" r="1.4"></circle></svg>Корзина · {{ cartCount }}
+        </button>
+        <button onClick="{{ goAccount }}" style="display:flex;align-items:center;gap:14px;background:{{ mAccBg }};border:none;border-left:3px solid {{ mAccAc }};padding:15px 22px;cursor:pointer;color:{{ mAcc }};font-weight:700;font-size:.95rem;text-align:left">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"></path></svg>Кабинет
+        </button>
+        <div style="margin-top:auto;padding:18px 22px;color:#b5bac4;font-size:.74rem">ArhoShop · оригинал с Poizon</div>
+      </div>
+      </sc-if>
+
+      <!-- SIZE SHEET -->
+      <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:rgba(11,11,16,.5);z-index:24;opacity:{{ sheetScrimOpacity }};pointer-events:{{ sheetScrimPe }};transition:opacity .3s"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;z-index:25;background:#fff;border-radius:24px 24px 0 0;padding:18px 18px 26px;transform:{{ sheetTransform }};transition:transform .34s cubic-bezier(.4,0,.2,1);box-shadow:0 -10px 40px rgba(0,0,0,.2)">
+        <div style="width:42px;height:5px;border-radius:999px;background:#E1E4EA;margin:0 auto 16px"></div>
+        <div style="display:flex;gap:13px;align-items:center;margin-bottom:16px">
+          <div style="width:60px;height:60px;background:#F4F5F7;border-radius:13px;display:flex;align-items:center;justify-content:center;padding:6px;flex:none"><img src="{{ sheetImg }}" alt="" style="max-width:100%;max-height:100%;object-fit:contain" onError="{{ imgErr }}"></div>
+          <div style="min-width:0">
+            <div style="font-size:.64rem;font-weight:700;color:#8a90a0;text-transform:uppercase">{{ sheetBrand }}</div>
+            <div style="font-weight:700;font-size:.84rem;color:#0B0B10;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ sheetName }}</div>
+          </div>
+        </div>
+        <div style="font-weight:800;font-size:.82rem;color:#0B0B10;margin-bottom:11px">Выбери размер</div>
+        <div style="display:flex;flex-wrap:wrap;gap:9px">
+          <sc-for list="{{ sheetSizes }}" as="item" hint-placeholder-count="6">
+            <button onClick="{{ item.select }}" style="min-width:54px;padding:13px 8px;border:1.5px solid #E8EAEE;background:#fff;color:#0B0B10;border-radius:12px;font-weight:700;font-size:.88rem;cursor:pointer" style-hover="border-color:#1E4FFF;background:#F4F8FF">{{ item.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- TOAST -->
+      <div style="position:absolute;left:50%;bottom:{{ toastBottom }};transform:translateX(-50%);background:#0B0B10;color:#fff;font-weight:700;font-size:.82rem;padding:11px 20px;border-radius:999px;white-space:nowrap;z-index:30;opacity:{{ toastOpacity }};transition:opacity .25s,bottom .25s;pointer-events:none;box-shadow:0 10px 30px rgba(0,0,0,.3)">{{ toastMsg }}</div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:392,&quot;height&quot;:812},&quot;navStyle&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;tabs&quot;,&quot;drawer&quot;],&quot;default&quot;:&quot;tabs&quot;,&quot;tsType&quot;:&quot;'tabs'|'drawer'&quot;}}">
+class Component extends DCLogic {
+  state = {
+    screen:'home', drawerOpen:false,
+    cart:[], selId:null, selSize:null, sheetId:null, chartOpen:false,
+    filterCat:'Все', sort:'pop', sortOpen:false, query:'',
+    clicks:{}, checkout:'cart',
+    form:{name:'',phone:'',city:'',delivery:'courier'}, formErr:{},
+    acc:null, logged:false, authMode:'login', auth:{name:'',phone:'',email:'',pass:'',recEmail:''}, authErr:{}, showPass:false, forgotSent:null,
+    lastOrder:null,
+    toast:null,
+  };
+  TIERS = [
+    {key:'bronze',name:'Бронза',icon:'🥉',min:50000,rate:0.01},
+    {key:'silver',name:'Серебро',icon:'🥈',min:100000,rate:0.02},
+    {key:'gold',name:'Золото',icon:'🥇',min:250000,rate:0.035},
+    {key:'plat',name:'Платина',icon:'💎',min:500000,rate:0.05},
+  ];
+
+  componentDidMount(){
+    if(!window.APP_PRODUCTS){
+      this._t = setInterval(()=>{ if(window.APP_PRODUCTS){ clearInterval(this._t); this.forceUpdate(); } }, 60);
+    }
+    // восстановление сессии из сохранённого токена (бэкенд)
+    if(window.ArhoAuth){
+      ArhoAuth.restore().then(a=>{ if(a) this.setState({acc:this.accFromApi(a), logged:true}); }).catch(()=>{});
+    }
+    // глобальная популярность с сервера → ранжирование «Популярное сейчас»
+    if(window.ArhoPopular){
+      ArhoPopular.seed().then(()=>{
+        try{ const c=JSON.parse(localStorage.getItem('arho_clicks')||'{}'); this.setState({clicks:Object.assign({},c,this.state.clicks)}); }catch(e){}
+      });
+    }
+  }
+  // Приведение аккаунта из API (api.js → ArhoAuth.account()) к форме компонента.
+  accFromApi(a){
+    if(!a) return null;
+    return { name:a.name, phone:a.phone, email:a.email, spent:a.spent||0, bonuses:a.bonuses||0, orders:a.orders||[] };
+  }
+  get PR(){ return window.APP_PRODUCTS || []; }
+  fmt(n){ return (n||0).toLocaleString('ru-RU') + ' ₽'; }
+  imgErr=(e)=>{ e.target.style.opacity=0.12; };
+  showToast(msg){
+    this.setState({toast:msg});
+    clearTimeout(this._toastT);
+    this._toastT = setTimeout(()=>this.setState({toast:null}), 1800);
+  }
+  tierFor(spent){
+    let i=-1; for(let k=0;k<this.TIERS.length;k++){ if(spent>=this.TIERS[k].min) i=k; }
+    if(i<0) return {none:true,name:'Без уровня',icon:'⚪',rate:0,min:0,idx:-1,next:this.TIERS[0]};
+    return Object.assign({},this.TIERS[i],{idx:i,next:this.TIERS[i+1]||null});
+  }
+  card(p){
+    return {
+      id:p.id, im:p.im, b:p.b, n:p.n, priceFmt:this.fmt(p.p),
+      open:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.open(p.id); },
+      add:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.quickAdd(p.id); },
+    };
+  }
+
+  /* nav */
+  go(s){ this.setState({screen:s, drawerOpen:false}); }
+  goHome=()=>this.go('home'); goCatalog=()=>this.go('catalog');
+  goSearch=()=>this.go('search'); goCart=()=>{ this.setState({screen:'cart', drawerOpen:false, checkout:(this.state.checkout==='done'?'cart':this.state.checkout)}); };
+  goAccount=()=>this.go('account');
+  goCatSneakers=()=>this.setState({screen:'catalog',filterCat:'Кроссовки',query:''});
+  goCatClothing=()=>this.setState({screen:'catalog',filterCat:'Одежда',query:''});
+  toggleDrawer=()=>this.setState(s=>({drawerOpen:!s.drawerOpen}));
+  closeDrawer=()=>this.setState({drawerOpen:false});
+  goBack=()=>this.setState({screen:'catalog'});
+  heroOpen=()=>this.go('catalog');
+
+  /* product */
+  open(id){ if(window.ArhoPopular) ArhoPopular.track(id); this.setState(s=>({screen:'product', selId:id, selSize:null, chartOpen:false, clicks:Object.assign({},s.clicks,{[id]:(s.clicks[id]||0)+1})})); }
+  selectSize(sz){ this.setState({selSize:sz}); }
+  quickAdd(id){
+    const p=this.PR.find(x=>x.id===id); if(!p) return;
+    if(p.s && p.s.length>1){ this.setState({sheetId:id}); return; }  // нужен выбор размера
+    this.addToCart(id,(p.s&&p.s[0])||'ONE SIZE');
+    this.showToast('Добавлено в корзину');
+  }
+  closeSheet=()=>this.setState({sheetId:null});
+  chooseSheetSize(size){ const id=this.state.sheetId; this.addToCart(id,size); this.setState({sheetId:null}); this.showToast('Добавлено в корзину'); }
+  toggleChart=()=>this.setState(s=>({chartOpen:!s.chartOpen}));
+  addCurrent=()=>{
+    const p=this.PR.find(x=>x.id===this.state.selId); if(!p) return;
+    if(!this.state.selSize){ this.showToast('Выбери размер'); return; }
+    this.addToCart(p.id,this.state.selSize);
+    this.showToast('Добавлено в корзину');
+  };
+  addToCart(id,size){
+    this.setState(s=>{
+      const cart=s.cart.slice();
+      const ex=cart.find(i=>i.id===id&&i.size===size);
+      if(ex) ex.qty++; else cart.push({id,size,qty:1});
+      return {cart};
+    });
+  }
+  inc(id,size){ this.setState(s=>({cart:s.cart.map(i=>i.id===id&&i.size===size?Object.assign({},i,{qty:i.qty+1}):i)})); }
+  dec(id,size){ this.setState(s=>({cart:s.cart.flatMap(i=>{ if(i.id===id&&i.size===size){ if(i.qty<=1) return []; return [Object.assign({},i,{qty:i.qty-1})]; } return [i]; })})); }
+  removeItem(id,size){ this.setState(s=>({cart:s.cart.filter(i=>!(i.id===id&&i.size===size))})); }
+
+  /* catalog/search */
+  onSearchInput=(e)=>this.setState({query:e.target.value});
+  selectCat(c){ this.setState({filterCat:c}); }
+  toggleFilter=()=>this.setState(s=>({sortOpen:!s.sortOpen}));
+  pickSort(v){ this.setState({sort:v, sortOpen:false}); }
+  pickSuggest(q){ this.setState({query:q}); }
+
+  /* checkout */
+  goCheckoutForm=()=>this.setState(s=>{
+    const f=Object.assign({},s.form);
+    if(s.logged && s.acc){
+      if(!f.name) f.name=s.acc.name&&s.acc.name!=='Гость'?s.acc.name:f.name;
+      if(!f.phone) f.phone=s.acc.phone||f.phone;
+    }
+    return {checkout:'form', form:f};
+  });
+  backToCart=()=>this.setState({checkout:'cart'});
+  setForm(k,v){ this.setState(s=>({form:Object.assign({},s.form,{[k]:v})})); }
+  fmtPhone(v){
+    let d=(v.match(/\d/g)||[]).join('');
+    if(d&&d[0]==='8') d='7'+d.slice(1);
+    if(d&&d[0]==='9') d='7'+d;
+    d=d.slice(0,11); let o='';
+    if(d.length){ o='+7'; if(d.length>1)o+=' '+d.slice(1,4); if(d.length>=5)o+=' '+d.slice(4,7); if(d.length>=8)o+='-'+d.slice(7,9); if(d.length>=10)o+='-'+d.slice(9,11); }
+    return o;
+  }
+  setFName=(e)=>this.setForm('name',e.target.value);
+  setFPhone=(e)=>this.setForm('phone',this.fmtPhone(e.target.value));
+  setFCity=(e)=>this.setForm('city',e.target.value);
+  setDelivery(v){ this.setForm('delivery',v); }
+  placeOrder=async ()=>{
+    const f=this.state.form; const err={};
+    if(!f.name.trim()) err.name=1;
+    if(((f.phone.match(/\d/g)||[]).length)<11) err.phone=1;
+    if(!f.city.trim()) err.city=1;
+    if(Object.keys(err).length){ this.setState({formErr:err}); this.showToast('Заполни поля корректно'); return; }
+    const total=this.cartTotal();
+    const items=this.state.cart.map(i=>{ const p=this.PR.find(x=>x.id===i.id)||{}; return {productId:i.id, name:p.n||'', size:i.size, qty:i.qty, price:p.p||0}; });
+    const deliveryLabel={courier:'Курьером до двери',pickup:'Пункт выдачи',post:'Почтой России'}[f.delivery]||f.delivery;
+    let r;
+    try{
+      r=await ArhoAuth.createOrder({ name:f.name.trim(), phone:f.phone.trim(), city:f.city.trim(), delivery:deliveryLabel, items });
+    }catch(e){ this.showToast((e&&e.message)||'Не удалось оформить заказ'); return; }
+    const num=r.order.id, earned=r.order.earnedBonuses;
+    // если авторизован — подтягиваем актуальные баллы/историю с сервера
+    let acc=this.state.acc;
+    if(ArhoAuth.isLoggedIn()){ const a=await ArhoAuth.refresh(); acc=this.accFromApi(a); }
+    this.setState({acc, logged:ArhoAuth.isLoggedIn(), cart:[], checkout:'done', form:{name:'',phone:'',city:'',delivery:'courier'}, formErr:{}, lastOrder:{num,total:r.order.total,earned,delivery:f.delivery}});
+  };
+  continueShop=()=>this.setState({screen:'home', checkout:'cart'});
+
+  /* account */
+  setAuth(k,v){ this.setState(s=>({auth:Object.assign({},s.auth,{[k]:v})})); }
+  setAName=(e)=>this.setAuth('name',e.target.value);
+  setAPhone=(e)=>this.setAuth('phone',this.fmtPhone(e.target.value));
+  setAEmail=(e)=>this.setAuth('email',e.target.value);
+  setAPass=(e)=>this.setAuth('pass',e.target.value);
+  toggleShowPass=()=>this.setState(s=>({showPass:!s.showPass}));
+  switchToSignup=()=>this.setState({authMode:'signup',authErr:{}});
+  switchToLogin=()=>this.setState({authMode:'login',authErr:{},forgotSent:null});
+  switchToForgot=()=>this.setState({authMode:'forgot',authErr:{},forgotSent:null});
+  setRecEmail=(e)=>this.setAuth('recEmail',e.target.value);
+  doForgot=async ()=>{
+    const email=(this.state.auth.recEmail||'').trim();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ this.setState({authErr:{rec:1}}); this.showToast('Введи корректный email'); return; }
+    try{ await ArhoAuth.forgot(email); }
+    catch(e){ this.showToast((e&&e.message)||'Ошибка'); return; }
+    this.setState({forgotSent:email, authErr:{}});
+    this.showToast('Письмо отправлено 📧');
+  };
+  doSignup=async ()=>{
+    const a=this.state.auth; const err={};
+    if(!a.name.trim()) err.name=1;
+    if(((a.phone.match(/\d/g)||[]).length)<11) err.phone=1;
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.email.trim())) err.email=1;
+    if((a.pass||'').length<6) err.pass=1;
+    if(Object.keys(err).length){ this.setState({authErr:err}); this.showToast('Пароль — минимум 6 символов'); return; }
+    try{
+      const r=await ArhoAuth.register({name:a.name.trim(), phone:a.phone.trim(), password:a.pass, email:a.email.trim()});
+      this.setState({acc:this.accFromApi(ArhoAuth.account()), logged:true, authErr:{}, auth:{name:'',phone:'',email:'',pass:''}});
+      this.showToast('Аккаунт создан 🎉');
+    }catch(e){
+      if(e.error==='phone_taken'){ this.setState({authErr:{phone:1}, authMode:'login'}); }
+      else if(e.error==='email_taken'){ this.setState({authErr:{email:1}, authMode:'login'}); }
+      this.showToast((e&&e.message)||'Не удалось создать аккаунт');
+    }
+  };
+  doLogin=async ()=>{
+    const a=this.state.auth; const err={};
+    if(((a.phone.match(/\d/g)||[]).length)<11) err.phone=1;
+    if(!(a.pass||'').length) err.pass=1;
+    if(Object.keys(err).length){ this.setState({authErr:err}); this.showToast('Введи телефон и пароль'); return; }
+    try{
+      await ArhoAuth.login({phone:a.phone.trim(), password:a.pass});
+      this.setState({acc:this.accFromApi(ArhoAuth.account()), logged:true, authErr:{}, auth:{name:'',phone:'',email:'',pass:''}});
+      this.showToast('С возвращением 👋');
+    }catch(e){
+      if(e.error==='no_account'){ this.setState({authErr:{phone:1}}); }
+      else if(e.error==='bad_credentials'){ this.setState({authErr:{pass:1}}); }
+      this.showToast((e&&e.message)||'Не удалось войти');
+    }
+  };
+  logout=()=>{ if(window.ArhoAuth) ArhoAuth.logout(); this.setState({logged:false,acc:null,authMode:'login'}); this.showToast('Вы вышли'); };
+
+  cartTotal(){ return this.state.cart.reduce((s,i)=>{ const p=this.PR.find(x=>x.id===i.id); return s+(p?p.p*i.qty:0); },0); }
+
+  renderVals(){
+    const S=this.state, navStyle=this.props.navStyle||'tabs';
+    const isTabs=navStyle==='tabs', isDrawer=navStyle==='drawer';
+    const scr=S.screen;
+    const ACT='#1E4FFF', INA='#9AA0B0';
+    const col=k=>scr===k?ACT:INA;
+    const PR=this.PR;
+
+    // featured by clicks then default
+    const ranked=PR.slice().sort((a,b)=>(S.clicks[b.id]||0)-(S.clicks[a.id]||0)|| a.id-b.id);
+    const featured=ranked.slice(0,8).map(p=>this.card(p));
+    const newItems=PR.slice(8,14).map(p=>this.card(p));
+
+    // catalog
+    const q=S.query.trim().toLowerCase();
+    let list=PR.filter(p=>(S.filterCat==='Все'||p.c===S.filterCat) && (!q || (p.n+' '+p.b).toLowerCase().includes(q)));
+    if(S.sort==='priceUp') list=list.slice().sort((a,b)=>a.p-b.p);
+    else if(S.sort==='priceDown') list=list.slice().sort((a,b)=>b.p-a.p);
+    const catalogItems=list.map(p=>this.card(p));
+    const sortLabel=S.sort==='priceUp'?'Дешевле':S.sort==='priceDown'?'Дороже':'Популярные';
+    const sortDefs=[{v:'pop',label:'Популярные'},{v:'priceUp',label:'Сначала дешевле'},{v:'priceDown',label:'Сначала дороже'}];
+    const sortOptions=sortDefs.map(o=>({label:o.label, select:()=>this.pickSort(o.v),
+      bg:S.sort===o.v?'#F4F8FF':'#fff', fg:S.sort===o.v?'#1E4FFF':'#0B0B10', fw:S.sort===o.v?'800':'600', checkDisplay:S.sort===o.v?'inline':'none'}));
+    const cats=['Все','Кроссовки','Одежда'];
+    const catChips=cats.map(c=>({label:c, select:()=>this.selectCat(c),
+      bc:S.filterCat===c?ACT:'#E8EAEE', bg:S.filterCat===c?ACT:'#fff', fg:S.filterCat===c?'#fff':'#0B0B10'}));
+
+    // search
+    const searchItems=(q?list:ranked.slice(0,6)).map(p=>this.card(p));
+    const suggests=['New Balance','SALOMON','15 MINS','Кроссовки','Одежда'];
+    const suggestChips=suggests.map(s=>({label:s, select:()=>this.pickSuggest(s)}));
+
+    // product
+    const sel=PR.find(p=>p.id===S.selId)||null;
+    const selSizes=(sel?sel.s:[]).map(sz=>({label:sz, select:()=>this.selectSize(sz),
+      bc:S.selSize===sz?ACT:'#E8EAEE', bg:S.selSize===sz?ACT:'#fff', fg:S.selSize===sz?'#fff':'#0B0B10'}));
+    // size chart
+    let chartHead=[], chartRows=[];
+    if(sel && sel.c==='Кроссовки'){
+      chartHead=['EU','39','40','41','42','43','44'];
+      chartRows=[{name:'US',vals:['6.5','7','8','8.5','9.5','10']},{name:'Стопа, мм',vals:['245','250','255','260','270','275']}];
+    } else if(sel){
+      chartHead=['Размер','S','M','L','XL'];
+      chartRows=[{name:'Грудь, см',vals:['96','100','104','108']},{name:'Длина, см',vals:['68','70','72','74']}];
+    }
+    const chartHeadCells=chartHead.map(h=>({v:h}));
+    const chartRowsV=chartRows.map(r=>({name:r.name, cells:r.vals.map(v=>({v}))}));
+    // size sheet
+    const sheetP=PR.find(p=>p.id===S.sheetId)||null;
+    const sheetSizes=(sheetP?sheetP.s:[]).map(sz=>({label:sz, select:()=>this.chooseSheetSize(sz)}));
+
+    // cart
+    const cartItems=S.cart.map(i=>{ const p=PR.find(x=>x.id===i.id)||{}; return {
+      im:p.im,b:p.b,n:p.n,sizeLabel:i.size,qty:i.qty,priceFmt:this.fmt((p.p||0)*i.qty),
+      inc:()=>this.inc(i.id,i.size), dec:()=>this.dec(i.id,i.size), remove:()=>this.removeItem(i.id,i.size)};
+    });
+    const cartCount=S.cart.reduce((s,i)=>s+i.qty,0);
+    const total=this.cartTotal();
+
+    // account
+    const acc=S.acc, logged=S.logged&&!!acc;
+    let av={};
+    if(logged){
+      const t=this.tierFor(acc.spent||0);
+      const next=t.next;
+      const prog=next?Math.min(100,Math.max(5,Math.round(((acc.spent||0)-t.min)/(next.min-t.min)*100))):100;
+      av={
+        accFirst:(acc.name||'Гость').split(' ')[0],
+        tierIcon:t.icon, tierName:t.name,
+        tierSub:t.none?'Уровень пока не присвоен':('кэшбэк '+(+(t.rate*100).toFixed(1))+'%'),
+        progPct:prog+'%',
+        toNextLabel:next?('До «'+next.name+'» — '+this.fmt(next.min-(acc.spent||0))):'Максимальный уровень 🎉',
+        bonuses:(acc.bonuses||0).toLocaleString('ru-RU'),
+        spentShort:this.fmt(acc.spent||0),
+        ordersCount:(acc.orders||[]).length,
+        tiersList:this.TIERS.map(x=>({icon:x.icon,name:x.name,rateLabel:'кэшбэк '+(+(x.rate*100).toFixed(1))+'%',minLabel:'от '+x.min.toLocaleString('ru-RU'),
+          bc:(!t.none&&x.key===t.key)?ACT:'#E8EAEE', bg:(!t.none&&x.key===t.key)?'#EAF6FF':'#fff'})),
+        ordersList:(acc.orders||[]).map(o=>({num:o.num,dateLabel:new Date(o.date).toLocaleDateString('ru-RU',{day:'2-digit',month:'short'}),countLabel:o.count+' тов.',totalFmt:this.fmt(o.total),earned:o.earned})),
+        ordersEmpty:(acc.orders||[]).length===0,
+      };
+    }
+
+    const drawerOpen=S.drawerOpen;
+    const mc=k=>scr===k?ACT:'#0B0B10';
+    const mbg=k=>scr===k?'#F4F8FF':'transparent';
+    const mac=k=>scr===k?ACT:'transparent';
+
+    return {
+      // chrome
+      isTabs,isDrawer, imgErr:this.imgErr,
+      topBg: scr==='product'?'#FFFFFF':'#F4F5F7', topFg:'#0B0B10',
+      cartCount, badgeShow: cartCount>0?'flex':'none',
+      colHome:col('home'),colCatalog:col('catalog'),colSearch:col('search'),colCart:col('cart'),colAccount:col('account'),
+      goHome:this.goHome,goCatalog:this.goCatalog,goSearch:this.goSearch,goCart:this.goCart,goAccount:this.goAccount,
+      toggleDrawer:this.toggleDrawer,closeDrawer:this.closeDrawer,
+      drawerX:drawerOpen?'0':'-105%', scrimOpacity:drawerOpen?'1':'0', scrimPe:drawerOpen?'auto':'none',
+      mHome:mc('home'),mCat:mc('catalog'),mSearch:mc('search'),mCart:mc('cart'),mAcc:mc('account'),
+      mHomeBg:mbg('home'),mCatBg:mbg('catalog'),mSearchBg:mbg('search'),mCartBg:mbg('cart'),mAccBg:mbg('account'),
+      mHomeAc:mac('home'),mCatAc:mac('catalog'),mSearchAc:mac('search'),mCartAc:mac('cart'),mAccAc:mac('account'),
+      // screen flags
+      isHome:scr==='home',isCatalog:scr==='catalog',isProduct:scr==='product',isSearch:scr==='search',isCart:scr==='cart',isAccount:scr==='account',
+      // home
+      heroImg:(PR[3]&&PR[3].im)||'', heroOpen:this.heroOpen,
+      goCatSneakers:this.goCatSneakers, goCatClothing:this.goCatClothing,
+      featured, newItems,
+      // catalog
+      query:S.query, onSearchInput:this.onSearchInput,
+      catChips, catalogItems, catalogCount:catalogItems.length+' товаров',
+      sortLabel, toggleFilter:this.toggleFilter,
+      sortOptions, sortMenuDisplay:S.sortOpen?'block':'none', sortChevron:S.sortOpen?'180deg':'0deg',
+      // search
+      suggestChips, searchItems, searchHeading:q?'Результаты':'Хиты продаж',
+      // product
+      selImg:sel?sel.im:'', selBrand:sel?sel.b:'', selName:sel?sel.n:'', selPriceFmt:sel?this.fmt(sel.p):'',
+      selSizes, goBack:this.goBack, addCurrent:this.addCurrent,
+      needSizeText:S.selSize?('· '+S.selSize):'· не выбран',
+      needSizeColor:S.selSize?'#1F8A5B':'#9AA0B0',
+      toggleChart:this.toggleChart, chartDisplay:S.chartOpen?'block':'none', chartChevron:S.chartOpen?'180deg':'0deg',
+      chartHeadCells, chartRowsV,
+      sheetSizes, sheetOpen:!!sheetP, sheetDisplay:sheetP?'flex':'none',
+      sheetBrand:sheetP?sheetP.b:'', sheetName:sheetP?sheetP.n:'', sheetImg:sheetP?sheetP.im:'',
+      sheetTransform:sheetP?'translateY(0)':'translateY(100%)', sheetScrimOpacity:sheetP?'1':'0', sheetScrimPe:sheetP?'auto':'none',
+      closeSheet:this.closeSheet,
+      // cart
+      cartTitle:S.checkout==='form'?'Оформление':S.checkout==='done'?'Готово':'Корзина',
+      coCart:S.checkout==='cart',coForm:S.checkout==='form',coDone:S.checkout==='done',
+      cartEmpty:S.cart.length===0, cartHasItems:S.cart.length>0,
+      cartItems, cartTotalFmt:this.fmt(total),
+      goCheckoutForm:this.goCheckoutForm, backToCart:this.backToCart,
+      fName:S.form.name,fPhone:S.form.phone,fCity:S.form.city,
+      setFName:this.setFName,setFPhone:this.setFPhone,setFCity:this.setFCity,
+      deliveryOptions:[
+        {key:'courier',icon:'🚚',label:'Курьером до двери'},
+        {key:'pickup',icon:'📦',label:'Пункт выдачи'},
+        {key:'post',icon:'✉️',label:'Почтой России'},
+      ].map(o=>({icon:o.icon,label:o.label,select:()=>this.setDelivery(o.key),
+        bc:S.form.delivery===o.key?'#1E4FFF':'#E8EAEE', bg:S.form.delivery===o.key?'#F4F8FF':'#fff',
+        dot:S.form.delivery===o.key?'#1E4FFF':'#fff', dotBc:S.form.delivery===o.key?'#1E4FFF':'#C9CED6'})),
+      fNameBc:S.formErr.name?'#E5484D':'#E8EAEE', fPhoneBc:S.formErr.phone?'#E5484D':'#E8EAEE', fCityBc:S.formErr.city?'#E5484D':'#E8EAEE',
+      placeOrder:this.placeOrder, continueShop:this.continueShop,
+      doneNum:S.lastOrder?S.lastOrder.num:'', doneTotalFmt:this.fmt(S.lastOrder?S.lastOrder.total:0), doneEarned:S.lastOrder?S.lastOrder.earned:0,
+      // account
+      accLogged:logged, accGuest:!logged,
+      authIsLogin:S.authMode==='login', authIsSignup:S.authMode==='signup', authIsForgot:S.authMode==='forgot',
+      switchToForgot:this.switchToForgot, setRecEmail:this.setRecEmail, doForgot:this.doForgot,
+      recEmail:S.auth.recEmail, recEmailBc:S.authErr.rec?'#E5484D':'#E8EAEE',
+      forgotSent:!!S.forgotSent, forgotNotSent:!S.forgotSent, forgotEmail:S.forgotSent||'',
+      aName:S.auth.name,aPhone:S.auth.phone,aEmail:S.auth.email,aPass:S.auth.pass,
+      setAName:this.setAName,setAPhone:this.setAPhone,setAEmail:this.setAEmail,setAPass:this.setAPass,
+      aNameBc:S.authErr.name?'#E5484D':'#E8EAEE', aPhoneBc:S.authErr.phone?'#E5484D':'#E8EAEE', aEmailBc:S.authErr.email?'#E5484D':'#E8EAEE', aPassBc:S.authErr.pass?'#E5484D':'#E8EAEE',
+      passType:S.showPass?'text':'password', passToggleLabel:S.showPass?'Скрыть':'Показать', toggleShowPass:this.toggleShowPass,
+      doLogin:this.doLogin,doSignup:this.doSignup,switchToSignup:this.switchToSignup,switchToLogin:this.switchToLogin,
+      logout:this.logout,
+      ...av,
+      // toast
+      toastMsg:S.toast||'', toastOpacity:S.toast?'1':'0', toastBottom:S.toast?'90px':'70px',
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+node_modules/
+.env
+# Локальная БД SQLite (создаётся при запуске)
+server/data/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+# Тестовая БД
+server/data/test.sqlite*
+.DS_Store
